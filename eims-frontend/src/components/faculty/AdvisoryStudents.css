@@ -1,0 +1,150 @@
+/* Advisory Students Styles */
+.advisory-students {
+  padding: 20px;
+}
+
+.section-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 30px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #333;
+}
+
+.advisory-container {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 30px;
+  margin-top: 20px;
+}
+
+.students-list {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+  height: fit-content;
+}
+
+.students-list h5 {
+  margin-bottom: 15px;
+  font-weight: 600;
+}
+
+.list-group {
+  max-height: 600px;
+  overflow-y: auto;
+}
+
+.list-group-item {
+  border: 1px solid #e0e0e0;
+  margin-bottom: 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.list-group-item:hover {
+  background-color: #f8f9fa;
+  border-color: #2196f3;
+}
+
+.list-group-item.active {
+  background-color: #e3f2fd;
+  border-color: #2196f3;
+}
+
+.list-group-item h6 {
+  margin: 0;
+  font-weight: 600;
+}
+
+.student-details {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+}
+
+.details-header {
+  border-bottom: 2px solid #2196f3;
+  padding-bottom: 15px;
+  margin-bottom: 20px;
+}
+
+.details-header h5 {
+  margin: 0;
+  font-weight: 600;
+}
+
+.details-cards {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+.detail-card {
+  background: #f8f9fa;
+  padding: 15px;
+  border-radius: 8px;
+  border-left: 4px solid #2196f3;
+}
+
+.detail-card strong {
+  display: block;
+  margin-bottom: 8px;
+  color: #333;
+  font-size: 0.9rem;
+}
+
+.detail-card p {
+  margin: 0;
+  color: #555;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.action-buttons .btn {
+  border-radius: 4px;
+  font-size: 0.85rem;
+  padding: 0.4rem 0.8rem;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 40px 20px;
+  color: #999;
+}
+
+.loading-spinner {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 40px;
+}
+
+@media (max-width: 768px) {
+  .advisory-container {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+
+  .details-cards {
+    grid-template-columns: 1fr;
+  }
+
+  .action-buttons {
+    flex-direction: column;
+  }
+
+  .action-buttons .btn {
+    width: 100%;
+  }
+}

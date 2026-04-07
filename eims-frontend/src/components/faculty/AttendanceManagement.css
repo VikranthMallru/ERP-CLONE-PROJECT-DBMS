@@ -1,0 +1,79 @@
+/* Attendance Management Styles */
+.attendance-management {
+  padding: 20px;
+}
+
+.section-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 30px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #333;
+}
+
+.controls-section {
+  background: #f8f9fa;
+  padding: 20px;
+  border-radius: 8px;
+  margin-bottom: 30px;
+}
+
+.controls-section .form-label {
+  margin-bottom: 10px;
+}
+
+.attendance-section {
+  background: white;
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+  padding: 20px;
+  margin-top: 20px;
+}
+
+.attendance-section h5 {
+  margin-bottom: 20px;
+  font-weight: 600;
+}
+
+.table-responsive {
+  overflow-x: auto;
+}
+
+.attendance-section table {
+  margin-bottom: 0;
+}
+
+.table-success {
+  background-color: #d4edda !important;
+}
+
+.attendance-summary {
+  background: #f8f9fa;
+  padding: 15px;
+  border-radius: 8px;
+  border-left: 4px solid #2196f3;
+}
+
+.attendance-summary p {
+  margin: 0;
+  font-weight: 500;
+}
+
+.loading-spinner {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 40px;
+}
+
+@media (max-width: 768px) {
+  .controls-section .row {
+    gap: 20px;
+  }
+
+  .table-responsive {
+    font-size: 0.9rem;
+  }
+}

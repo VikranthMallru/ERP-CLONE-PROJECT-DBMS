@@ -1,0 +1,155 @@
+/* Timetable Grid Styling */
+
+.timetable-grid {
+  overflow-x: auto;
+  margin-bottom: 20px;
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+}
+
+.timetable-wrapper {
+  min-width: 100%;
+}
+
+.timetable-table {
+  margin-bottom: 0;
+  border-collapse: collapse;
+  font-size: 13px;
+  width: 100%;
+}
+
+.timetable-table thead {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.timetable-table th {
+  background-color: #f8f9fa;
+  border: 1px solid #dee2e6;
+  padding: 12px 4px !important;
+  text-align: center;
+  font-weight: 600;
+  color: #0c5460;
+}
+
+.timetable-table td {
+  border: 1px solid #dee2e6;
+  padding: 8px !important;
+  min-height: 50px;
+  vertical-align: top;
+}
+
+.time-col {
+  width: 90px;
+  min-width: 90px;
+  background-color: #f8f9fa;
+  font-weight: 600;
+  position: sticky;
+  left: 0;
+  z-index: 5;
+}
+
+.day-col {
+  width: 150px;
+  min-width: 150px;
+}
+
+.day-full {
+  font-size: 13px;
+  font-weight: 600;
+  color: #0c5460;
+}
+
+.class-cell {
+  transition: background-color 0.2s ease;
+  position: relative;
+}
+
+.class-cell:hover {
+  box-shadow: inset 0 0 10px rgba(33, 150, 243, 0.1);
+}
+
+.class-slot {
+  padding: 6px 8px;
+  border-radius: 3px;
+  background: white;
+  border-left: 4px solid #2196f3;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+}
+
+.course-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1565c0;
+  margin-bottom: 3px;
+  word-wrap: break-word;
+  max-width: 130px;
+}
+
+.class-time {
+  font-size: 11px;
+  color: #666;
+  margin-bottom: 3px;
+}
+
+.class-location {
+  font-size: 11px;
+  color: #666;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1024px) {
+  .timetable-table {
+    font-size: 12px;
+  }
+  
+  .time-col {
+    width: 80px;
+    min-width: 80px;
+  }
+  
+  .day-col {
+    width: 120px;
+    min-width: 120px;
+  }
+  
+  .course-name {
+    max-width: 110px;
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 768px) {
+  .timetable-table {
+    font-size: 11px;
+  }
+  
+  .time-col {
+    width: 70px;
+    min-width: 70px;
+    padding: 6px 2px !important;
+  }
+  
+  .day-col {
+    width: 100px;
+    min-width: 100px;
+  }
+  
+  .day-full {
+    font-size: 11px;
+  }
+  
+  .course-name {
+    max-width: 90px;
+    font-size: 11px;
+  }
+  
+  .class-time,
+  .class-location {
+    font-size: 10px !important;
+  }
+}

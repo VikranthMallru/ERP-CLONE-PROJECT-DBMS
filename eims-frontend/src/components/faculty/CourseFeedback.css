@@ -1,0 +1,168 @@
+/* Course Feedback Styles */
+.course-feedback {
+  padding: 20px;
+}
+
+.section-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 30px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #333;
+}
+
+.feedback-container {
+  background: white;
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+  padding: 20px;
+}
+
+.course-selector {
+  margin-bottom: 20px;
+}
+
+.course-selector .form-label {
+  margin-bottom: 10px;
+}
+
+.feedback-section {
+  margin-top: 20px;
+}
+
+.stats-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 15px;
+  margin-bottom: 30px;
+}
+
+.stat-card {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 20px;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.stat-card h6 {
+  margin: 0 0 10px 0;
+  font-weight: 500;
+  font-size: 0.9rem;
+  opacity: 0.9;
+}
+
+.stat-card h4 {
+  margin: 0;
+  font-weight: 700;
+  font-size: 1.8rem;
+}
+
+.stat-card .small {
+  font-size: 0.75rem;
+  opacity: 0.8;
+  margin-left: 5px;
+}
+
+.feedback-list {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.feedback-card {
+  background: #f8f9fa;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 15px;
+  border-left: 4px solid #2196f3;
+}
+
+.feedback-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.student-info strong {
+  display: block;
+  margin-bottom: 3px;
+}
+
+.student-info small {
+  color: #999;
+  font-size: 0.8rem;
+}
+
+.feedback-meta {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.feedback-meta .badge {
+  font-size: 0.75rem;
+  padding: 0.35rem 0.6rem;
+}
+
+.rating-badge {
+  background: #ffc107;
+  color: #333;
+  padding: 0.35rem 0.6rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.feedback-text {
+  margin: 10px 0;
+  line-height: 1.5;
+  color: #333;
+}
+
+.suggestions-section {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid #ddd;
+  background: white;
+  padding: 10px;
+  border-radius: 4px;
+}
+
+.suggestions-section strong {
+  display: block;
+  margin-bottom: 5px;
+  font-size: 0.9rem;
+}
+
+.suggestions-section p {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.loading-spinner {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 40px;
+}
+
+@media (max-width: 768px) {
+  .stats-cards {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .feedback-header {
+    flex-direction: column;
+  }
+
+  .feedback-meta {
+    justify-content: flex-start;
+  }
+}
