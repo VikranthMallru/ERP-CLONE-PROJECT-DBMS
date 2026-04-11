@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import supabase from '../services/api';
+import API from '../services/api';
 
 function BankLogin({ onLoginSuccess, onSignupClick }) {
   const [identifier, setIdentifier] = useState('');
@@ -20,42 +20,17 @@ function BankLogin({ onLoginSuccess, onSignupClick }) {
       setLoading(true);
       setError('');
 
-      // Query Users table for bank customer (using email or name)
-      const { data, error: dbError } = await supabase
-        .from('Users')
-        .select('*')
-        .eq('user_id', identifier)
-        .or(`password.eq.${pin}`)
-        .single();
-
-      if (dbError || !data) {
-        // Try query Customers table for email match
-        const { data: customerData, error: custError } = await supabase
-          .from('Customers')
-          .select('*')
-          .or(`email.eq.${identifier},name.eq.${identifier}`)
-          .single();
-
-        if (custError || !customerData) {
-          throw new Error('Invalid credentials');
-        }
-        
-        // For demo - just check if PIN matches password (simplified)
-        const { data: userData } = await supabase
-          .from('Users')
-          .select('*')
-          .eq('user_id', identifier)
-          .single();
-
-        if (!userData || userData.password !== pin) {
-          throw new Error('Invalid PIN');
-        }
+      // Login with identifier (email or name) and PIN
+      const res = await API.post('/login', {
+        identifier: identifier,
+        password: pin
+      });
+      
+      if (res.status === 200) {
+        onLoginSuccess(identifier);
       }
-
-      localStorage.setItem('bank_email', identifier);
-      onLoginSuccess(identifier);
     } catch (err) {
-      setError(err.message || 'Invalid Credentials');
+      setError(err.response?.data?.message || 'Invalid Credentials');
     } finally {
       setLoading(false);
     }

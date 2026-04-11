@@ -1,5 +1,5 @@
 import { useState } from "react";
-import supabase from "../services/api";
+import API from "../services/api";
 
 function Login({ onLoginSuccess }) {
   const [user_id, setUserId] = useState("");
@@ -22,27 +22,16 @@ function Login({ onLoginSuccess }) {
     setLoading(true);
 
     try {
-      // Query Users table from Supabase
-      const { data, error: dbError } = await supabase
-        .from('Users')
-        .select('*')
-        .eq('user_id', user_id)
-        .single();
+      const res = await API.post("/login", {
+        user_id,
+        password
+      });
 
-      if (dbError || !data) {
-        throw new Error("User not found");
-      }
-
-      // Check password (plain text comparison for demo - not production safe)
-      if (data.password !== password) {
-        throw new Error("Invalid password");
-      }
-
-      setSuccess("Login successful!");
+      setSuccess(res.data.message);
       // Store user data in localStorage
       localStorage.setItem("user_id", user_id);
-      localStorage.setItem("role", data.role);
-      localStorage.setItem("token", "demo-token");
+      localStorage.setItem("role", res.data.role);
+      localStorage.setItem("token", res.data.token || "");
 
       // Clear form
       setUserId("");
@@ -57,7 +46,7 @@ function Login({ onLoginSuccess }) {
       }, 500);
 
     } catch (err) {
-      setError(err.message || "Login failed. Please try again.");
+      setError(err.response?.data?.message || "Login failed. Please try again.");
     } finally {
       setLoading(false);
     }

@@ -1,8 +1,7 @@
-import { createClient } from '@supabase/supabase-js';
+import axios from 'axios';
 
-const supabaseUrl = process.env.REACT_APP_SUPABASE_URL || 'http://localhost:54321';
-const supabaseKey = process.env.REACT_APP_SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9';
+const API = axios.create({
+  baseURL: process.env.REACT_APP_API_URL || 'http://localhost:4000'
+});
 
-const supabase = createClient(supabaseUrl, supabaseKey);
-
-export default supabase;
+export default API;
