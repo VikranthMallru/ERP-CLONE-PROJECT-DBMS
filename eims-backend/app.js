@@ -253,15 +253,15 @@ app.post('/student/profile', async (req, res) => {
        WHERE student_id = $10
        RETURNING *`,
       [
-        student_name,
-        contact_no,
-        college_email,
-        personal_email,
-        residence_address,
-        join_date,
-        semester,
-        department_id,
-        discipline_id,
+        student_name || null,
+        contact_no || null,
+        college_email || null,
+        personal_email || null,
+        residence_address || null,
+        join_date || null,
+        semester || null,
+        department_id || null,
+        discipline_id || null,
         student_id
       ]
     );
