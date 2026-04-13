@@ -119,7 +119,7 @@ CREATE TABLE Scheduled_class (
 );
 
 CREATE TABLE Leave_Requests (
-    request_id INT PRIMARY KEY,
+    request_id SERIAL PRIMARY KEY,
     student_id TEXT,
     start_date DATE,
     end_date DATE,
@@ -241,6 +241,7 @@ CREATE TABLE booked_class (
     start_time TIME NOT NULL,
     end_time TIME NOT NULL,
     faculty_id TEXT,
+    booking_date DATE,
     FOREIGN KEY (course_offering_id) REFERENCES Course_Offerings(course_offering_id),
     CHECK (start_time < end_time)
 );
@@ -250,11 +251,12 @@ CREATE TABLE booked_class (
 -- ========================================
 
 CREATE TABLE Customers (
-    cust_id INT PRIMARY KEY,
-    name TEXT,
-    email TEXT,
-    phone_no VARCHAR(10),
-    address TEXT
+    customer_id SERIAL PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    email VARCHAR(100) UNIQUE NOT NULL,
+    phone VARCHAR(15),
+    password VARCHAR(255),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE Accounts (
@@ -269,9 +271,17 @@ CREATE TABLE Accounts (
 CREATE TABLE Transactions (
     transaction_id SERIAL PRIMARY KEY,
     account_id INT,
-    type VARCHAR(20),
+    transaction_type VARCHAR(20),
     amount NUMERIC(12,2),
-    description TEXT,
-    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (account_id) REFERENCES Accounts(customer_id)
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    status TEXT
+);
+
+CREATE TABLE Transfers (
+    transfer_id SERIAL PRIMARY KEY,
+    from_account INT,
+    to_account INT,
+    amount NUMERIC(12,2),
+    status VARCHAR(20),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

@@ -392,8 +392,8 @@ app.post('/create-account', async (req, res) => {
     if (initial_balance > 0) {
       // Record initial deposit
       await bankDB.query(
-        `INSERT INTO Transactions (account_id, type, amount, status, created_at)
-         VALUES ($1, 'deposit', $2, 'success', NOW())`,
+        `INSERT INTO Transactions (account_id, transaction_type, amount, status, created_at)
+         VALUES ($1, 'credit', $2, 'success', NOW())`,
         [accountId, initial_balance]
       );
     }
@@ -414,6 +414,6 @@ app.post('/create-account', async (req, res) => {
   }
 });
 
-app.listen(4000, () => {
-  console.log("Bank server running on port 4000 🚀");
+app.listen(bankBackendPort, () => {
+  console.log(`Bank server running on port ${bankBackendPort} 🚀`);
 });

@@ -747,6 +747,10 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+CREATE TRIGGER trg_registration_open
+AFTER UPDATE OF registration_open_date ON System_Config
+FOR EACH ROW EXECUTE FUNCTION trg_registration_open();
+
 -- ========================================
 -- PART 6: BANK TRIGGERS
 -- ========================================
@@ -842,6 +846,129 @@ SELECT fa.student_id, f.faculty_id, f.faculty_name, f.email, f.contact_no, d.dep
 FROM Faculty_Advisor fa
 JOIN Faculty f ON fa.faculty_id = f.faculty_id
 JOIN Departments d ON f.department_id = d.dept_id;
+
+-- ========================================
+-- PART 7b: MISSING VIEWS (backend queries these)
+-- ========================================
+
+CREATE OR REPLACE VIEW Student_Attendance_Summary AS
+SELECT
+    a.student_id,
+    c.course_name,
+    a.course_offering_id,
+    COUNT(*) AS total_classes,
+    COUNT(*) FILTER (WHERE a.status = 'Present') AS present_count,
+    ROUND(COUNT(*) FILTER (WHERE a.status = 'Present')::NUMERIC / NULLIF(COUNT(*), 0) * 100, 2) AS attendance_percentage
+FROM Attendance a
+JOIN Course_Offerings co ON a.course_offering_id = co.course_offering_id
+JOIN Courses c ON co.course_id = c.course_id
+GROUP BY a.student_id, c.course_name, a.course_offering_id;
+
+CREATE OR REPLACE VIEW Student_Exam_View AS
+SELECT
+    es.student_id,
+    c.course_name,
+    e.date_of_exam,
+    e.building_name,
+    e.room_number
+FROM Exam_Seating es
+JOIN Exams e ON es.exam_id = e.exam_id
+JOIN Course_Offerings co ON e.course_offering_id = co.course_offering_id
+JOIN Courses c ON co.course_id = c.course_id;
+
+CREATE OR REPLACE VIEW Student_Timetable_View AS
+SELECT
+    ca.student_id,
+    c.course_name,
+    sc.scheduled_day,
+    sc.start_time,
+    sc.end_time,
+    sc.building_name,
+    sc.room_number
+FROM Course_Allotted ca
+JOIN Scheduled_class sc ON ca.course_offering_id = sc.course_offering_id
+JOIN Course_Offerings co ON ca.course_offering_id = co.course_offering_id
+JOIN Courses c ON co.course_id = c.course_id;
+
+CREATE OR REPLACE VIEW current_sem_sgpa AS
+SELECT
+    ca.student_id,
+    co.semester,
+    SUM(c.credits * CASE g.grade
+        WHEN 'Ex' THEN 10 WHEN 'A' THEN 9 WHEN 'B' THEN 8
+        WHEN 'C' THEN 7 WHEN 'D' THEN 6 WHEN 'E' THEN 5
+        WHEN 'P' THEN 4 ELSE 0 END
+    ) / NULLIF(SUM(CASE WHEN g.grade <> 'F' THEN c.credits ELSE 0 END), 0) AS sgpa
+FROM Course_Allotted ca
+JOIN Course_Offerings co ON ca.course_offering_id = co.course_offering_id
+JOIN Courses c ON co.course_id = c.course_id
+JOIN Grades g ON g.student_id = ca.student_id AND g.course_offering_id = ca.course_offering_id
+JOIN Students s ON ca.student_id = s.student_id AND co.semester = s.semester
+GROUP BY ca.student_id, co.semester;
+
+CREATE OR REPLACE VIEW Student_Current_Sem_Courses_Grades AS
+SELECT
+    ca.student_id,
+    c.course_name,
+    c.credits,
+    g.grade
+FROM Course_Allotted ca
+JOIN Course_Offerings co ON ca.course_offering_id = co.course_offering_id
+JOIN Courses c ON co.course_id = c.course_id
+JOIN Students s ON ca.student_id = s.student_id AND co.semester = s.semester
+LEFT JOIN Grades g ON g.student_id = ca.student_id AND g.course_offering_id = ca.course_offering_id;
+
+CREATE OR REPLACE VIEW Student_Previous_SGPA AS
+SELECT
+    ca.student_id,
+    co.semester,
+    SUM(c.credits * CASE g.grade
+        WHEN 'Ex' THEN 10 WHEN 'A' THEN 9 WHEN 'B' THEN 8
+        WHEN 'C' THEN 7 WHEN 'D' THEN 6 WHEN 'E' THEN 5
+        WHEN 'P' THEN 4 ELSE 0 END
+    ) / NULLIF(SUM(CASE WHEN g.grade <> 'F' THEN c.credits ELSE 0 END), 0) AS sgpa
+FROM Course_Allotted ca
+JOIN Course_Offerings co ON ca.course_offering_id = co.course_offering_id
+JOIN Courses c ON co.course_id = c.course_id
+JOIN Grades g ON g.student_id = ca.student_id AND g.course_offering_id = ca.course_offering_id
+JOIN Students s ON ca.student_id = s.student_id AND co.semester <> s.semester
+GROUP BY ca.student_id, co.semester;
+
+CREATE OR REPLACE VIEW Faculty_Courses_Taught AS
+SELECT
+    co.faculty_id,
+    c.course_name,
+    co.course_offering_id,
+    co.semester,
+    co.year_offering
+FROM Course_Offerings co
+JOIN Courses c ON co.course_id = c.course_id;
+
+CREATE OR REPLACE VIEW Faculty_Leave_Approvals AS
+SELECT
+    fa.faculty_id,
+    lr.request_id,
+    lr.student_id,
+    s.student_name,
+    lr.start_date,
+    lr.end_date,
+    lr.reason,
+    lr.status
+FROM Leave_Requests lr
+JOIN Students s ON lr.student_id = s.student_id
+JOIN Faculty_Advisor fa ON lr.student_id = fa.student_id;
+
+CREATE OR REPLACE VIEW Faculty_Course_Students AS
+SELECT
+    ca.course_offering_id,
+    ca.student_id
+FROM Course_Allotted ca;
+
+CREATE OR REPLACE VIEW Faculty_Advisory_Students AS
+SELECT
+    fa.faculty_id,
+    fa.student_id
+FROM Faculty_Advisor fa;
 
 -- ========================================
 -- PART 8: INDEXES
