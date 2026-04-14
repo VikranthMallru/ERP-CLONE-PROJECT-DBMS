@@ -126,7 +126,24 @@ app.get('/', (req, res) => {
 
 
 app.post('/signup', async (req, res) => {
-  const { user_id, password, role } = req.body;
+  const { 
+    user_id, 
+    password, 
+    role,
+    // Student fields
+    student_name,
+    contact_no,
+    college_email,
+    personal_email,
+    residence_address,
+    join_date,
+    semester,
+    department_id,
+    discipline_id,
+    // Faculty fields
+    faculty_name,
+    email
+  } = req.body;
 
   try {
     if (
@@ -157,14 +174,16 @@ app.post('/signup', async (req, res) => {
 
     if (role === "Student") {
       await pool.query(
-        "INSERT INTO Students (student_id) VALUES ($1)",
-        [user_id]
+        `INSERT INTO Students (student_id, student_name, contact_no, college_email, personal_email, residence_address, join_date, semester, department_id, discipline_id) 
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
+        [user_id, student_name || null, contact_no || null, college_email || null, personal_email || null, residence_address || null, join_date || null, semester || null, department_id || null, discipline_id || null]
       );
     }
     if (role === "Faculty") {
       await pool.query(
-        "INSERT INTO Faculty (faculty_id) VALUES ($1)",
-        [user_id]
+        `INSERT INTO Faculty (faculty_id, faculty_name, contact_no, email, department_id) 
+         VALUES ($1, $2, $3, $4, $5)`,
+        [user_id, faculty_name || null, contact_no || null, email || null, department_id || null]
       );
     }
 
@@ -302,6 +321,70 @@ app.get('/student/profile/:id', async (req, res) => {
   }
 });
 
+// Faculty Profile Endpoints
+app.post('/faculty/profile', async (req, res) => {
+  const {
+    faculty_id,
+    faculty_name,
+    contact_no,
+    email,
+    department_id
+  } = req.body;
+
+  try {
+    const result = await pool.query(
+      `UPDATE Faculty
+       SET faculty_name = $1,
+           contact_no = $2,
+           email = $3,
+           department_id = $4
+       WHERE faculty_id = $5
+       RETURNING *`,
+      [
+        faculty_name || null,
+        contact_no || null,
+        email || null,
+        department_id || null,
+        faculty_id
+      ]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: "Faculty not found" });
+    }
+
+    res.json({
+      message: "Profile updated successfully",
+      data: result.rows[0]
+    });
+
+  } catch (err) {
+    console.error("Faculty profile update error:", err);
+    res.status(500).json({ message: "Error updating profile: " + err.message });
+  }
+});
+
+app.get('/faculty/profile/:id', async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const result = await pool.query(
+      "SELECT * FROM Faculty WHERE faculty_id = $1",
+      [id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: "Faculty not found" });
+    }
+
+    res.json(result.rows[0]);
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Error fetching profile");
+  }
+});
+
 app.get('/users', async (req, res) => {
   try {
     const result = await pool.query("SELECT user_id, role FROM Users");
@@ -411,55 +494,83 @@ app.post('/faculty/approve', async (req, res) => {
   const { student_id, course_offering_id } = req.body;
 
   try {
-    await pool.query(
-      `UPDATE Course_Registration
-       SET approved = TRUE
+    console.log('Received approval request:', { student_id, course_offering_id });
+
+    // First, verify the record exists
+    const checkRes = await pool.query(
+      `SELECT * FROM Course_Registration
        WHERE student_id = $1
        AND course_offering_id = $2`,
       [student_id, course_offering_id]
     );
+    
+    if (checkRes.rows.length === 0) {
+      return res.status(404).json({ error: 'Course registration not found' });
+    }
+    
+    console.log('Found registration record:', checkRes.rows[0]);
 
+    // Update the approved field
+    const updateResult = await pool.query(
+      `UPDATE Course_Registration
+       SET approved = TRUE
+       WHERE student_id = $1
+       AND course_offering_id = $2
+       RETURNING *`,
+      [student_id, course_offering_id]
+    );
+    
+    console.log('Update result - rows affected:', updateResult.rowCount);
+    if (updateResult.rows.length > 0) {
+      console.log('Updated record:', updateResult.rows[0]);
+    }
+
+    // Check if the record was deleted by the trigger
+    const afterDeleteCheck = await pool.query(
+      `SELECT * FROM Course_Registration
+       WHERE student_id = $1
+       AND course_offering_id = $2`,
+      [student_id, course_offering_id]
+    );
+    
+    console.log('After trigger - record still in Course_Registration?', afterDeleteCheck.rows.length > 0);
+
+    // Check if record was added to Course_Allotted
+    const courseAllottedCheck = await pool.query(
+      `SELECT * FROM Course_Allotted
+       WHERE student_id = $1
+       AND course_offering_id = $2`,
+      [student_id, course_offering_id]
+    );
+    
+    console.log('Record in Course_Allotted?', courseAllottedCheck.rows.length > 0);
+
+    // Check for pending approvals
     const pending = await pool.query(
-      `SELECT 1 FROM Course_Registration
+      `SELECT COUNT(*) as count FROM Course_Registration
        WHERE student_id = $1 AND approved = FALSE`,
       [student_id]
     );
+    
+    const pendingCount = parseInt(pending.rows[0].count);
+    console.log('Remaining pending approvals for student:', pendingCount);
 
-    if (pending.rows.length > 0) {
-      return res.json({ message: "Course approved (waiting for all approvals)" });
+    if (pendingCount > 0) {
+      return res.json({ 
+        message: "Course approved (waiting for all approvals)",
+        pendingCount: pendingCount
+      });
     }
 
-    const studentRes = await pool.query(
-      `SELECT college_email FROM Students WHERE student_id = $1`,
-      [student_id]
-    );
-
-    const email = studentRes.rows[0].college_email;
-
-    const coursesRes = await pool.query(
-      `SELECT course_name, faculty_name, semester
-       FROM Student_course_view
-       WHERE student_id = $1`,
-      [student_id]
-    );
-
-    /*let courseList = coursesRes.rows
-      .map(c => `• ${c.course_name} (Faculty: ${c.faculty_name}, Sem: ${c.semester})`)
-      .join('\n');
-
-      await transporter.sendMail({
-      from: '23cs01028@iitbbs.ac.in',
-      to: email,
-      subject: 'Course Registration Approved',
-      text: `Your course registration is fully approved.\n\nRegistered Courses:\n${courseList}`
-    });*/
-
-    res.json({ message: "All courses approved. Email sent." });
+    res.json({ 
+      message: "All courses approved successfully",
+      registered: courseAllottedCheck.rows.length > 0
+    });
 
   } catch (err) {
-  console.error("FULL ERROR:", err);
-  res.status(500).json({ error: err.message });
-}
+    console.error("FULL ERROR:", err);
+    res.status(500).json({ error: err.message });
+  }
 });
 
 app.get('/student/courses/:id', async (req, res) => {
@@ -879,10 +990,10 @@ app.get('/student/:id/leave-requests', async (req, res) => {
 
   try {
     const result = await pool.query(
-      `SELECT *
-       FROM Student_Leave_Requests
+      `SELECT request_id, student_id, start_date, end_date, reason, status, applied_on
+       FROM Leave_Requests
        WHERE student_id = $1
-       ORDER BY start_date DESC`,
+       ORDER BY applied_on DESC`,
       [id]
     );
 
@@ -1023,12 +1134,20 @@ app.get('/faculty/course/:course_offering_id/students-attendance', async (req, r
 });
 
 app.post('/faculty/mark-attendance', async (req, res) => {
-  const { course_offering_id, date, present_student_ids } = req.body;
+  const { course_offering_id, date, attendance, present_student_ids } = req.body;
 
   try {
+    // Support both formats: attendance array or direct present_student_ids
+    let ids = present_student_ids;
+    if (attendance && Array.isArray(attendance)) {
+      ids = attendance
+        .filter((record) => record.is_present)
+        .map((record) => record.student_id);
+    }
+
     await pool.query(
       `CALL mark_attendance($1, $2, $3)`,
-      [course_offering_id, date, present_student_ids]
+      [course_offering_id, date, ids]
     );
 
     res.json({ message: "Attendance marked successfully" });
@@ -1044,7 +1163,7 @@ app.get('/faculty/:id/courses', async (req, res) => {
 
   try {
     const result = await pool.query(
-      `SELECT course_name, course_offering_id, semester, year_offering
+      `SELECT course_name, course_offering_id, semester, year_offering, capacity
        FROM Faculty_Courses_Taught
        WHERE faculty_id = $1`,
       [id]
@@ -1113,15 +1232,11 @@ app.get('/faculty/:id/current-courses', async (req, res) => {
 
   try {
     const result = await pool.query(
-      `SELECT course_name, course_offering_id, semester, year_offering
-       FROM Faculty_Courses_Taught
-       WHERE faculty_id = $1
-       AND year_offering = EXTRACT(YEAR FROM CURRENT_DATE)
-       AND (
-         (EXTRACT(MONTH FROM CURRENT_DATE) < 6 AND semester % 2 = 0)
-         OR
-         (EXTRACT(MONTH FROM CURRENT_DATE) >= 6 AND semester % 2 = 1)
-       )`,
+      `SELECT fct.course_name, fct.course_offering_id, fct.semester, fct.year_offering, fct.capacity,
+        (SELECT COUNT(*) FROM Faculty_Course_Students fcs WHERE fcs.course_offering_id = fct.course_offering_id) AS enrolled_students
+       FROM Faculty_Courses_Taught fct
+       WHERE fct.faculty_id = $1
+       AND fct.year_offering = EXTRACT(YEAR FROM CURRENT_DATE)`,
       [id]
     );
 
@@ -1137,20 +1252,32 @@ app.get('/faculty/:id/leave-requests', async (req, res) => {
   const { id } = req.params;
 
   try {
+    console.log('Fetching leave requests for faculty:', id);
+    
     const result = await pool.query(
-      `SELECT request_id, student_id, student_name,
-              start_date, end_date, reason, status
-       FROM Faculty_Leave_Approvals
-       WHERE faculty_id = $1
-       AND status = 'Pending'`,
+      `SELECT 
+        lr.request_id,
+        lr.student_id,
+        s.student_name,
+        lr.start_date,
+        lr.end_date,
+        lr.reason,
+        lr.status,
+        lr.applied_on
+       FROM Leave_Requests lr
+       JOIN Faculty_Advisor fa ON lr.student_id = fa.student_id
+       JOIN Students s ON lr.student_id = s.student_id
+       WHERE fa.faculty_id = $1
+       ORDER BY lr.applied_on DESC`,
       [id]
     );
 
+    console.log('Leave requests:', result.rows);
     res.json(result.rows);
 
   } catch (err) {
-    console.error(err);
-    res.status(500).send("Error fetching leave requests");
+    console.error('Error fetching leave requests:', err);
+    res.status(500).json({ error: "Error fetching leave requests", details: err.message });
   }
 });
 
@@ -1196,19 +1323,25 @@ app.get('/faculty/:id/advisory-students', async (req, res) => {
 
 app.get('/faculty/course/:course_offering_id/feedbacks', async (req, res) => {
   const { course_offering_id } = req.params;
-  
+
+  // validate and coerce to integer
+  const cid = parseInt(course_offering_id, 10);
+  if (isNaN(cid)) {
+    return res.status(400).json({ error: 'Invalid course_offering_id' });
+  }
+
   try {
     const result = await pool.query(
-      `SELECT f.feedback
-      FROM Feedback f
-      JOIN Students s 
-      ON f.student_id = s.student_id
-      WHERE f.course_offering_id = $1`,
-      [course_offering_id]
+      `SELECT f.student_id, f.feedback, co.course_offering_id, c.course_name
+       FROM Feedback f
+       JOIN Course_Offerings co ON f.course_offering_id = co.course_offering_id
+       JOIN Courses c ON co.course_id = c.course_id
+       WHERE f.course_offering_id = $1
+       ORDER BY f.student_id`,
+      [cid]
     );
-    
+
     res.json(result.rows);
-    
   } catch (err) {
     console.error(err);
     res.status(500).send("Error fetching feedback");
@@ -1218,73 +1351,134 @@ app.get('/faculty/course/:course_offering_id/feedbacks', async (req, res) => {
 
 
 app.get('/faculty/available-slots', async (req, res) => {
-  const { day, course_offering_id } = req.query;
+  const { building } = req.query;
 
   try {
-    if (!course_offering_id) {
+    console.log('Fetching available rooms for building:', building);
+    
+    const query = building
+      ? `SELECT DISTINCT
+          r.room_number,
+          r.building_name,
+          r.capacity
+         FROM Rooms r
+         WHERE r.building_name = $1
+         ORDER BY r.building_name, r.room_number`
+      : `SELECT DISTINCT
+          r.room_number,
+          r.building_name,
+          r.capacity
+         FROM Rooms r
+         ORDER BY r.building_name, r.room_number`;
+
+    const result = building
+      ? await pool.query(query, [building])
+      : await pool.query(query);
+
+    const slots = result.rows.map(room => ({
+      room_id: room.room_number,
+      room_name: `Room ${room.room_number}`,
+      building_name: room.building_name,
+      building_number: room.building_name,
+      capacity: room.capacity,
+      room_capacity: room.capacity
+    }));
+
+    console.log('Available slots:', slots);
+    res.json(slots);
+
+  } catch (err) {
+    console.error('Error fetching slots:', err);
+    res.status(500).json({ error: "Error fetching slots", details: err.message });
+  }
+});
+
+app.get('/faculty/buildings', async (req, res) => {
+  try {
+    console.log('Fetching available buildings');
+    
+    const result = await pool.query(
+      `SELECT DISTINCT building_name
+       FROM Rooms
+       ORDER BY building_name`
+    );
+
+    const buildings = result.rows.map(row => row.building_name);
+
+    console.log('Available buildings:', buildings);
+    res.json(buildings);
+
+  } catch (err) {
+    console.error('Error fetching buildings:', err);
+    res.status(500).json({ error: "Error fetching buildings", details: err.message });
+  }
+});
+
+app.post('/faculty/book-class', async (req, res) => {
+  const { course_offering_id, room_id, building_name, scheduled_day, start_time, end_time, booked_by_faculty_id } = req.body;
+
+  try {
+    console.log('Booking class request:', { course_offering_id, room_id, building_name, scheduled_day, start_time, end_time, booked_by_faculty_id });
+    
+    if (!course_offering_id || !room_id || !building_name || !scheduled_day || !start_time || !end_time || !booked_by_faculty_id) {
       return res.status(400).json({
-        error: "course_offering_id is required"
+        error: "All fields are required: course_offering_id, room_id, building_name, scheduled_day, start_time, end_time, booked_by_faculty_id"
       });
     }
 
     const result = await pool.query(
-      `SELECT * FROM get_room_availability($1)`,
-      [day || null]
+      `INSERT INTO booked_class 
+       (course_offering_id, faculty_id, room_number, building_name, scheduled_day, start_time, end_time)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)
+       RETURNING *`,
+      [course_offering_id, booked_by_faculty_id, room_id, building_name, scheduled_day, start_time, end_time]
     );
 
-    res.json({
-      course_offering_id,
-      slots: result.rows
+    console.log('Class booked:', result.rows[0]);
+    res.status(201).json({
+      message: "Class scheduled successfully",
+      booking: result.rows[0]
     });
 
   } catch (err) {
-    console.error(err);
-    res.status(500).send("Error fetching slots");
+    console.error('Class booking error:', err);
+    res.status(400).json({
+      error: err.message
+    });
   }
 });
 
 app.post('/faculty/book-rooms', async (req, res) => {
-  const { bookings } = req.body;
+  const { room_id, booking_reason, booked_by_faculty_id, booking_date, start_time, end_time } = req.body;
 
   try {
-    if (!bookings || bookings.length === 0) {
+    console.log('Booking request:', { room_id, booking_reason, booked_by_faculty_id, booking_date, start_time, end_time });
+    
+    if (!room_id || !booking_reason || !booked_by_faculty_id) {
       return res.status(400).json({
-        error: "Bookings array is required"
+        error: "room_id, booking_reason, and booked_by_faculty_id are required"
       });
     }
 
-    for (const b of bookings) {
-      if (!b.course_offering_id) {
-        return res.status(400).json({
-          error: "course_offering_id is required for all bookings"
-        });
-      }
+    const bookingStartTime = start_time || '09:00:00';
+    const bookingEndTime = end_time || '10:00:00';
 
-      if (!b.booking_date) {
-        return res.status(400).json({
-          error: "booking_date is required for all bookings"
-        });
-      }
-
-      if (!b.start_time || !b.end_time) {
-        return res.status(400).json({
-          error: "start_time and end_time are required"
-        });
-      }
-    }
-
-    await pool.query(
-      `CALL insert_bookings($1::json)`,
-      [JSON.stringify(bookings)]
+    const result = await pool.query(
+      `INSERT INTO booked_class 
+       (faculty_id, room_number, scheduled_day, start_time, end_time, building_name)
+       VALUES ($1, $2, $3, $4, $5, 'Main Building')
+       RETURNING *`,
+      [booked_by_faculty_id, room_id, booking_date || new Date().toISOString().split('T')[0], bookingStartTime, bookingEndTime]
     );
 
+    console.log('Booking created:', result.rows[0]);
     res.status(201).json({
-      message: "Bookings successful"
+      message: "Room booked successfully",
+      booking: result.rows[0]
     });
 
   } catch (err) {
-    console.error(err);
-
+    console.error('Room booking error:', err);
     res.status(400).json({
       error: err.message
     });
@@ -1297,20 +1491,356 @@ app.get('/faculty/:id/bookings', async (req, res) => {
 
   try {
     const result = await pool.query(
-      `SELECT *
-       FROM booked_class
-       WHERE faculty_id = $1
-       ORDER BY scheduled_day, start_time`,
+      `SELECT 
+        bc.booking_id,
+        bc.course_offering_id,
+        bc.faculty_id,
+        bc.room_number,
+        bc.building_name,
+        bc.scheduled_day,
+        bc.start_time,
+        bc.end_time,
+        c.course_name,
+        c.course_code,
+        r.capacity
+       FROM booked_class bc
+       LEFT JOIN Course_Offerings co ON bc.course_offering_id = co.course_offering_id
+       LEFT JOIN Courses c ON co.course_id = c.course_id
+       LEFT JOIN Rooms r ON bc.room_number = r.room_number AND bc.building_name = r.building_name
+       WHERE bc.faculty_id = $1
+       ORDER BY bc.scheduled_day DESC, bc.start_time DESC`,
+      [id]
+    );
+
+    const bookings = result.rows.map(row => ({
+      booking_id: row.booking_id,
+      course_offering_id: row.course_offering_id,
+      faculty_id: row.faculty_id,
+      room_id: row.room_number,
+      room_name: `Room ${row.room_number}`,
+      building_name: row.building_name,
+      capacity: row.capacity,
+      course_name: row.course_name,
+      course_code: row.course_code,
+      booking_date: row.scheduled_day,
+      start_time: row.start_time,
+      end_time: row.end_time,
+      status: 'confirmed'
+    }));
+
+    console.log('Faculty bookings:', bookings);
+    res.json(bookings);
+
+  } catch (err) {
+    console.error('Error fetching bookings:', err);
+    res.status(500).json({ error: "Error fetching bookings", details: err.message });
+  }
+});
+
+// Faculty Schedule
+app.get('/faculty/:id/schedule', async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    console.log('Fetching schedule for faculty:', id);
+    
+    const result = await pool.query(
+      `SELECT 
+        sc.course_offering_id,
+        sc.scheduled_day,
+        sc.start_time,
+        sc.end_time,
+        sc.room_number,
+        sc.building_name,
+        c.course_id,
+        c.course_name
+       FROM Scheduled_class sc
+       INNER JOIN Course_Offerings co ON sc.course_offering_id = co.course_offering_id
+       INNER JOIN Courses c ON co.course_id = c.course_id
+       WHERE co.faculty_id = $1
+       ORDER BY 
+         CASE 
+           WHEN sc.scheduled_day = 'Monday' THEN 1
+           WHEN sc.scheduled_day = 'Tuesday' THEN 2
+           WHEN sc.scheduled_day = 'Wednesday' THEN 3
+           WHEN sc.scheduled_day = 'Thursday' THEN 4
+           WHEN sc.scheduled_day = 'Friday' THEN 5
+           WHEN sc.scheduled_day = 'Saturday' THEN 6
+           ELSE 7
+         END,
+         sc.start_time`,
+      [id]
+    );
+
+    console.log('Query found', result.rows.length, 'scheduled classes for faculty:', id);
+    
+    const schedule = result.rows.map(row => ({
+      course_offering_id: row.course_offering_id,
+      course_id: row.course_id,
+      course_name: row.course_name,
+      scheduled_day: row.scheduled_day,
+      start_time: row.start_time,
+      end_time: row.end_time,
+      room_number: row.room_number,
+      building_name: row.building_name
+    }));
+
+    res.json(schedule);
+
+  } catch (err) {
+    console.error('Error fetching schedule:', err);
+    res.status(500).json({ error: "Error fetching schedule", details: err.message });
+  }
+});
+
+// Admin APIs
+app.post('/admin/declare-results', async (req, res) => {
+  const { results_declaration_date } = req.body;
+
+  try {
+    if (!results_declaration_date) {
+      return res.status(400).json({ error: "results_declaration_date is required" });
+    }
+
+    console.log('Declaring results for date:', results_declaration_date);
+    
+    const result = await pool.query(
+      `UPDATE System_Config 
+       SET results_declaration_date = $1
+       WHERE config_id = 1
+       RETURNING *`,
+      [results_declaration_date]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "System config not found" });
+    }
+
+    res.json({
+      message: "Results declared successfully. CGPA updated for all students.",
+      config: result.rows[0]
+    });
+
+  } catch (err) {
+    console.error('Error declaring results:', err);
+    res.status(500).json({ error: "Error declaring results", details: err.message });
+  }
+});
+
+app.get('/admin/system-config', async (req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT * FROM System_Config WHERE config_id = 1`
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "System config not found" });
+    }
+
+    res.json(result.rows[0]);
+
+  } catch (err) {
+    console.error('Error fetching system config:', err);
+    res.status(500).json({ error: "Error fetching system config", details: err.message });
+  }
+});
+
+// Student Results APIs
+app.get('/student/:id/results', async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const result = await pool.query(
+      `SELECT cgpa, total_credits
+       FROM Results
+       WHERE student_id = $1`,
+      [id]
+    );
+
+    if (result.rows.length > 0) {
+      res.json(result.rows[0]);
+    } else {
+      res.json({ cgpa: 0, total_credits: 0 });
+    }
+
+  } catch (err) {
+    console.error('Error fetching results:', err);
+    res.status(500).json({ error: "Error fetching results", details: err.message });
+  }
+});
+
+app.get('/student/:id/grades', async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const result = await pool.query(
+      `SELECT 
+        g.student_id,
+        g.course_offering_id,
+        g.grade,
+        c.course_name,
+        c.course_id,
+        co.semester,
+        co.year_offering,
+        co.faculty_id
+       FROM Grades g
+       LEFT JOIN Course_Offerings co ON g.course_offering_id = co.course_offering_id
+       LEFT JOIN Courses c ON co.course_id = c.course_id
+       WHERE g.student_id = $1
+       ORDER BY co.year_offering DESC, co.semester DESC`,
       [id]
     );
 
     res.json(result.rows);
 
   } catch (err) {
-    console.error(err);
-    res.status(500).send("Error fetching bookings");
+    console.error('Error fetching grades:', err);
+    res.status(500).json({ error: "Error fetching grades", details: err.message });
   }
 });
+
+// Admin SQL Console Endpoint
+app.post('/admin/run-query', async (req, res) => {
+  const { query, admin_id } = req.body;
+
+  try {
+    // Validate admin role
+    if (!admin_id) {
+      return res.status(403).json({ error: 'Admin ID required' });
+    }
+
+    // Check if user is admin
+    const adminCheck = await pool.query(
+      `SELECT role FROM Users WHERE user_id = $1`,
+      [admin_id]
+    );
+
+    if (adminCheck.rows.length === 0 || adminCheck.rows[0].role !== 'Admin') {
+      return res.status(403).json({ error: 'Unauthorized: Admin access required' });
+    }
+
+    // Validate query
+    if (!query || typeof query !== 'string' || query.trim().length === 0) {
+      return res.status(400).json({ error: 'Invalid query: Query cannot be empty' });
+    }
+
+    // Remove trailing semicolon and normalize
+    let cleanQuery = query.trim();
+    if (cleanQuery.endsWith(';')) {
+      cleanQuery = cleanQuery.slice(0, -1).trim();
+    }
+
+    const queryUpper = cleanQuery.toUpperCase();
+
+    // Allow SELECT, INSERT, UPDATE, DELETE queries
+    if (!queryUpper.startsWith('SELECT') && !queryUpper.startsWith('INSERT') && 
+        !queryUpper.startsWith('UPDATE') && !queryUpper.startsWith('DELETE')) {
+      return res.status(400).json({ error: 'Invalid query: Only SELECT, INSERT, UPDATE, and DELETE queries are allowed' });
+    }
+
+    // Block dangerous DDL/DCL operations
+    const dangerousKeywords = ['DROP', 'ALTER', 'TRUNCATE', 'CREATE', 'EXEC', 'EXECUTE', 'GRANT', 'REVOKE'];
+    for (const keyword of dangerousKeywords) {
+      const regex = new RegExp(`\\b${keyword}\\b`, 'i');
+      if (regex.test(queryUpper)) {
+        return res.status(400).json({ error: `Invalid query: ${keyword} operations are not allowed` });
+      }
+    }
+
+    // Enforce LIMIT for SELECT queries
+    let executionQuery = cleanQuery;
+    if (queryUpper.startsWith('SELECT')) {
+      if (!queryUpper.includes('LIMIT')) {
+        executionQuery += ' LIMIT 100';
+      } else {
+        const limitMatch = executionQuery.match(/LIMIT\s+(\d+)/i);
+        if (limitMatch && parseInt(limitMatch[1]) > 100) {
+          executionQuery = executionQuery.replace(/LIMIT\s+\d+/i, 'LIMIT 100');
+        }
+      }
+    }
+
+    // Execute query with timeout
+    const startTime = Date.now();
+    let result;
+
+    try {
+      result = await Promise.race([
+        pool.query(executionQuery),
+        new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('Query timeout: exceeded 5 seconds')), 5000)
+        )
+      ]);
+    } catch (timeoutErr) {
+      if (timeoutErr.message.includes('timeout')) {
+        return res.status(408).json({ error: 'Query timeout: exceeded 5 seconds maximum' });
+      }
+      throw timeoutErr;
+    }
+
+    const executionTime = Date.now() - startTime;
+    const affectedRows = result.rows ? result.rows.length : (result.rowCount || 0);
+
+    // Log the query
+    try {
+      await pool.query(
+        `INSERT INTO Admin_Query_Logs (admin_id, query_string, executed_at, row_count, execution_time_ms)
+         VALUES ($1, $2, CURRENT_TIMESTAMP, $3, $4)`,
+        [admin_id, query, affectedRows, executionTime]
+      );
+    } catch (logErr) {
+      console.error('Error logging query:', logErr);
+    }
+
+    res.json({
+      rows: result.rows || [],
+      rowCount: affectedRows,
+      executionTime: executionTime,
+      columns: result.fields ? result.fields.map(f => f.name) : []
+    });
+
+  } catch (err) {
+    console.error('Error executing admin query:', err);
+
+    try {
+      const { admin_id: aid, query: q } = req.body;
+      if (aid && q) {
+        await pool.query(
+          `INSERT INTO Admin_Query_Logs (admin_id, query_string, executed_at, error_message)
+           VALUES ($1, $2, CURRENT_TIMESTAMP, $3)`,
+          [aid, q, err.message]
+        );
+      }
+    } catch (logErr) {
+      console.error('Error logging query error:', logErr);
+    }
+
+    const errorMessage = err.message.includes('syntax error')
+      ? `SQL Syntax Error: ${err.message}`
+      : err.message.includes('does not exist')
+      ? `Table/Column Error: ${err.message}`
+      : `Query Error: ${err.message}`;
+
+    res.status(400).json({ error: errorMessage });
+  }
+});
+
+// Create Admin Query Logs table if it doesn't exist
+pool.query(`
+  CREATE TABLE IF NOT EXISTS Admin_Query_Logs (
+    log_id SERIAL PRIMARY KEY,
+    admin_id VARCHAR(50) NOT NULL,
+    query_string TEXT NOT NULL,
+    executed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    row_count INTEGER,
+    execution_time_ms INTEGER,
+    error_message TEXT,
+    FOREIGN KEY (admin_id) REFERENCES Users(user_id)
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_admin_query_logs_admin_id ON Admin_Query_Logs(admin_id);
+  CREATE INDEX IF NOT EXISTS idx_admin_query_logs_timestamp ON Admin_Query_Logs(executed_at);
+`).catch(err => console.error('Error creating Admin_Query_Logs table:', err));
 
 app.listen(eimsBackendPort, () => {
   console.log(`Server running on port ${eimsBackendPort}`);

@@ -8,6 +8,8 @@ import LeaveApprovals from '../components/faculty/LeaveApprovals';
 import AdvisoryStudents from '../components/faculty/AdvisoryStudents';
 import CourseFeedback from '../components/faculty/CourseFeedback';
 import RoomBookings from '../components/faculty/RoomBookings';
+import FacultySchedule from '../components/faculty/FacultySchedule';
+import FacultyProfile from '../components/FacultyProfile';
 import './FacultyDashboard.css';
 
 const FacultyDashboard = () => {
@@ -57,12 +59,20 @@ const FacultyDashboard = () => {
     }
   };
 
+  const handleLogout = () => {
+    localStorage.removeItem("user_id");
+    localStorage.removeItem("role");
+    localStorage.removeItem("token");
+    window.location.href = "/";
+  };
+
   return (
     <div className="faculty-dashboard">
       <div className="dashboard-header">
         <div className="header-content">
           <h1>Faculty Dashboard</h1>
           <p className="subtitle">Welcome, {facultyName || 'Faculty Member'}</p>
+          <button className="btn btn-danger btn-sm" onClick={handleLogout} style={{position: 'absolute', right: '20px', top: '20px'}}>Logout</button>
         </div>
       </div>
 
@@ -125,6 +135,8 @@ const FacultyDashboard = () => {
           <nav className="sidebar-nav">
             {[
               { id: 'overview', label: 'Overview', icon: 'bi-house' },
+              { id: 'profile', label: 'My Profile', icon: 'bi-person-circle' },
+              { id: 'schedule', label: 'My Schedule', icon: 'bi-calendar-week' },
               { id: 'courses', label: 'Course Management', icon: 'bi-book' },
               { id: 'approvals', label: 'Registration Approvals', icon: 'bi-check-circle' },
               { id: 'attendance', label: 'Attendance', icon: 'bi-calendar-check' },
@@ -214,6 +226,8 @@ const FacultyDashboard = () => {
             </div>
           )}
 
+          {activeTab === 'profile' && <FacultyProfile userId={facultyId} />}
+          {activeTab === 'schedule' && <FacultySchedule />}
           {activeTab === 'courses' && <CourseManagement />}
           {activeTab === 'approvals' && <RegistrationApprovals />}
           {activeTab === 'attendance' && <AttendanceManagement />}

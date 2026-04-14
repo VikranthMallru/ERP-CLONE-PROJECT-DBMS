@@ -3,6 +3,7 @@ import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import Dashboard from "./pages/Dashboard";
 import FacultyDashboard from "./pages/FacultyDashboard";
+import AdminDashboard from "./pages/AdminDashboard";
 import { useState, useEffect } from "react";
 
 function App() {
@@ -18,6 +19,9 @@ function App() {
 
   if (isLoggedIn) {
     const role = localStorage.getItem("role");
+    if (role === "Admin") {
+      return <AdminDashboard />;
+    }
     if (role === "Faculty") {
       return <FacultyDashboard />;
     }

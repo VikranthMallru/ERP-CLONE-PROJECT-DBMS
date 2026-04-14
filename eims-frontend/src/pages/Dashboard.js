@@ -10,6 +10,8 @@ import ExamsDashboard from "../components/ExamsDashboard";
 import SupplementaryExams from "../components/SupplementaryExams";
 import Timetable from "../components/Timetable";
 import LeaveRequest from "../components/LeaveRequest";
+import Results from "../components/Results";
+import StudentAttendance from "../components/StudentAttendance";
 import API from "../services/api";
 
 
@@ -96,6 +98,14 @@ function Dashboard() {
                   </button>
                   <button
                     className={`list-group-item list-group-item-action ${
+                      activeTab === "attendance" ? "active bg-primary text-white" : ""
+                    }`}
+                    onClick={() => setActiveTab("attendance")}
+                  >
+                    <i className="fas fa-calendar-check me-2"></i> Attendance Dashboard
+                  </button>
+                  <button
+                    className={`list-group-item list-group-item-action ${
                       activeTab === "fees" ? "active bg-primary text-white" : ""
                     }`}
                     onClick={() => setActiveTab("fees")}
@@ -136,6 +146,14 @@ function Dashboard() {
                   </button>
                   <button
                     className={`list-group-item list-group-item-action ${
+                      activeTab === "results" ? "active bg-primary text-white" : ""
+                    }`}
+                    onClick={() => setActiveTab("results")}
+                  >
+                    <i className="fas fa-chart-line me-2"></i> Results
+                  </button>
+                  <button
+                    className={`list-group-item list-group-item-action ${
                       activeTab === "supplementary" ? "active bg-primary text-white" : ""
                     }`}
                     onClick={() => setActiveTab("supplementary")}
@@ -168,11 +186,13 @@ function Dashboard() {
             {activeTab === "profile" && <StudentProfile userId={userId} />}
             {activeTab === "registrations" && <CourseRegistrations userId={userId} />}
             {activeTab === "courses" && <Courses userId={userId} />}
+            {activeTab === "attendance" && <StudentAttendance userId={userId} />}
             {activeTab === "fees" && <FeeStatus userId={userId} />}
             {activeTab === "feedback" && <Feedback userId={userId} />}
             {activeTab === "cdc" && <CDC userId={userId} />}
             {activeTab === "backlogs" && <Backlogs userId={userId} />}
             {activeTab === "exams" && <ExamsDashboard userId={userId} />}
+            {activeTab === "results" && <Results userId={userId} />}
             {activeTab === "supplementary" && <SupplementaryExams userId={userId} />}
             {activeTab === "timetable" && <Timetable userId={userId} />}
             {activeTab === "leave" && studentProfile && (

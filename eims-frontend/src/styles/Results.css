@@ -1,0 +1,200 @@
+.results-container {
+  padding: 20px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  min-height: 100vh;
+}
+
+.results-container h3 {
+  color: #333;
+  font-weight: 600;
+  margin-bottom: 20px;
+  border-bottom: 3px solid #007bff;
+  padding-bottom: 10px;
+}
+
+.results-container h5 {
+  color: #495057;
+  font-weight: 600;
+  margin-top: 20px;
+}
+
+/* Summary Cards */
+.summary-cards {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+  margin-bottom: 30px;
+}
+
+.summary-card {
+  flex: 1;
+  min-width: 200px;
+  padding: 20px;
+  border-radius: 8px;
+  text-align: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.summary-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.cgpa-card {
+  background: linear-gradient(135deg, #1a3a52 0%, #0f2838 100%) !important;
+  color: #ffffff !important;
+  border: 3px solid #00273f !important;
+  box-shadow: 0 4px 15px rgba(0, 75, 135, 0.4) !important;
+}
+
+.credits-card {
+  background: linear-gradient(135deg, #1a5f3f 0%, #0d3d26 100%) !important;
+  color: #ffffff !important;
+  border: 2px solid #0d3d26 !important;
+  box-shadow: 0 4px 15px rgba(26, 95, 63, 0.4) !important;
+}
+
+.card-label {
+  font-size: 14px;
+  font-weight: 500;
+  opacity: 1 !important;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 10px;
+  color: #ffffff !important;
+}
+
+.card-value {
+  font-size: 48px;
+  font-weight: 700;
+  margin: 10px 0;
+  line-height: 1;
+  color: #ffffff !important;
+}
+
+.card-max-out {
+  font-size: 12px;
+  opacity: 0.95;
+  margin-top: 10px;
+  color: #ffffff !important;
+}
+
+/* Grades Section */
+.grades-section {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.extension-groups {
+  margin-top: 20px;
+}
+
+.extension-group {
+  margin-bottom: 30px;
+}
+
+.extension-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px;
+  background: #f0f0f0;
+  border-left: 4px solid #007bff;
+  border-radius: 4px;
+  margin-bottom: 12px;
+}
+
+.extension-header h6 {
+  margin: 0;
+  color: #333;
+  font-weight: 600;
+}
+
+.course-count {
+  background: #007bff;
+  color: white;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.grades-table {
+  margin-bottom: 0;
+  font-size: 14px;
+}
+
+.grades-table thead {
+  background: #f8f9fa;
+}
+
+.grades-table thead th {
+  font-weight: 600;
+  color: #495057;
+  border-bottom: 2px solid #dee2e6;
+  padding: 12px;
+}
+
+.grades-table tbody tr {
+  transition: background-color 0.2s ease;
+}
+
+.grades-table tbody tr:hover {
+  opacity: 0.8;
+}
+
+.grades-table tbody td {
+  padding: 12px;
+  vertical-align: middle;
+  border-bottom: 1px solid #dee2e6;
+}
+
+.badge-grade {
+  background: #495057;
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-weight: 600;
+  font-size: 12px;
+  display: inline-block;
+  min-width: 40px;
+  text-align: center;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .summary-cards {
+    flex-direction: column;
+  }
+
+  .summary-card {
+    min-width: unset;
+  }
+
+  .card-value {
+    font-size: 36px;
+  }
+
+  .extension-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .course-count {
+    align-self: flex-end;
+  }
+
+  .grades-table {
+    font-size: 12px;
+  }
+
+  .grades-table thead th,
+  .grades-table tbody td {
+    padding: 8px;
+  }
+}
