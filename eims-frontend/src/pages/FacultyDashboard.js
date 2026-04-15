@@ -37,21 +37,27 @@ const FacultyDashboard = () => {
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
-      // Fetch faculty info
-      const facultyRes = await api.get(`/faculty/${facultyId}`);
-      setFacultyName(facultyRes.data.name);
 
-      // Fetch courses count
-      const coursesRes = await api.get(`/faculty/${facultyId}/current-courses`);
-      const studentCountRes = await api.get(`/faculty/${facultyId}/total-students`);
-      const approvalsRes = await api.get(`/faculty/pending/${facultyId}`);
-      const leavesRes = await api.get(`/faculty/${facultyId}/leave-requests`);
+      const [facultyRes, coursesRes, approvalsRes, leavesRes] = await Promise.all([
+        api.get(`/faculty/profile/${facultyId}`),
+        api.get(`/faculty/${facultyId}/current-courses`),
+        api.get(`/faculty/pending/${facultyId}`),
+        api.get(`/faculty/${facultyId}/leave-requests`)
+      ]);
+
+      setFacultyName(facultyRes.data.faculty_name || '');
+
+      const totalStudents = coursesRes.data.reduce(
+        (sum, c) => sum + (parseInt(c.enrolled_students) || 0), 0
+      );
 
       setStats({
         totalCourses: coursesRes.data.length,
-        totalStudents: studentCountRes.data.total || 0,
+        totalStudents,
         pendingApprovals: approvalsRes.data.length,
-        pendingLeaves: leavesRes.data.filter((l) => l.status === 'pending').length
+        pendingLeaves: leavesRes.data.filter(
+          (l) => l.status?.toLowerCase() === 'pending'
+        ).length
       });
     } catch (err) {
       console.error('Failed to fetch dashboard data:', err);
@@ -61,10 +67,8 @@ const FacultyDashboard = () => {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem("user_id");
-    localStorage.removeItem("role");
-    localStorage.removeItem("token");
-    window.location.href = "/";
+    localStorage.clear();
+    window.location.href = '/login';
   };
 
   return (
