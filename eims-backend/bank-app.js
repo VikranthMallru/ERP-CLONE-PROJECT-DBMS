@@ -11,8 +11,12 @@ const app = express();
 const bankBackendPort = Number(process.env.PORT) || 4000;
 const eimsBackendUrl = process.env.EIMS_BACKEND_URL || 'http://localhost:5000';
 const sessionSecret = process.env.SESSION_SECRET || 'bank-secret';
+const bankFrontendUrl = process.env.BANK_FRONTEND_URL || 'http://localhost:3001';
 
-app.use(cors());
+app.use(cors({
+  origin: bankFrontendUrl,
+  credentials: true
+}));
 app.use(express.json());
 
 app.use(session({
