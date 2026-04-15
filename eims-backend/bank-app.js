@@ -372,6 +372,17 @@ app.post('/create-account', async (req, res) => {
 
     if (existingCustomer.rows.length > 0) {
       customerId = existingCustomer.rows[0].customer_id;
+
+      // Check if customer already has an account
+      const existingAccount = await bankDB.query(
+        `SELECT account_id FROM Accounts WHERE customer_id = $1`,
+        [customerId]
+      );
+      if (existingAccount.rows.length > 0) {
+        return res.status(400).json({
+          message: "An account already exists for this email"
+        });
+      }
     } else {
       // Create new customer
       const customerResult = await bankDB.query(
