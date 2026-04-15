@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>ERP Clone Project - Hosting Report</title>
+<style>
+  body { font-family: 'Calibri', 'Segoe UI', sans-serif; margin: 60px; line-height: 1.6; color: #222; }
+  h1 { text-align: center; font-size: 26pt; color: #1a1a2e; margin-bottom: 5px; }
+  .subtitle { text-align: center; font-size: 14pt; color: #555; margin-bottom: 10px; }
+  .meta { text-align: center; font-size: 11pt; color: #777; margin-bottom: 40px; }
+  h2 { font-size: 16pt; color: #16213e; border-bottom: 2px solid #0f3460; padding-bottom: 4px; margin-top: 35px; }
+  h3 { font-size: 13pt; color: #0f3460; margin-top: 20px; }
+  table { border-collapse: collapse; width: 100%; margin: 12px 0 20px 0; }
+  th { background-color: #0f3460; color: white; padding: 10px 14px; text-align: left; font-size: 10.5pt; }
+  td { border: 1px solid #ccc; padding: 8px 14px; font-size: 10.5pt; }
+  tr:nth-child(even) { background-color: #f4f6fa; }
+  .arch-box { background: #f8f9fb; border: 1px solid #d0d5dd; border-radius: 6px; padding: 20px; margin: 15px 0; font-family: 'Consolas', monospace; font-size: 10pt; white-space: pre; line-height: 1.5; }
+  ul { margin: 8px 0; }
+  li { margin-bottom: 4px; font-size: 11pt; }
+  .section-intro { font-size: 11pt; color: #444; margin-bottom: 10px; }
+  .highlight { background: #e8f4f8; padding: 10px 15px; border-left: 4px solid #0f3460; margin: 12px 0; font-size: 11pt; }
+  .page-break { page-break-before: always; }
+</style>
+</head>
+<body>
+
+<h1>ERP Clone Project</h1>
+<p class="subtitle">Cloud Hosting &amp; Deployment Report</p>
+<p class="meta">
+  Course: Database Systems (DBS) &mdash; Semester 6<br>
+  Date: April 2026
+</p>
+
+<h2>1. Introduction</h2>
+<p class="section-intro">
+  This report documents the complete cloud hosting and deployment process for the ERP Clone Project — an Educational Institute Management System (EIMS) integrated with a Banking Module. The project comprises four services deployed across three cloud platforms, all connected to a centralized PostgreSQL database.
+</p>
+
+<h2>2. System Architecture</h2>
+
+<div class="arch-box">
+┌────────────────────┐       ┌────────────────────┐       ┌──────────────────────────┐
+│   EIMS Frontend    │──────▶│   EIMS Backend     │──────▶│                          │
+│   (React - Vercel) │       │   (Node.js/Express │       │   Supabase PostgreSQL    │
+│                    │       │    - Render)        │       │   (Cloud Database)       │
+└────────────────────┘       └────────────────────┘       │                          │
+                                                          │  36 Tables               │
+┌────────────────────┐       ┌────────────────────┐       │  21 Views                │
+│   Bank Frontend    │──────▶│   Bank Backend     │──────▶│  19 Triggers             │
+│   (React - Vercel) │       │   (Node.js/Express │       │  35 Functions/Procedures │
+│                    │       │    - Render)        │       │                          │
+└────────────────────┘       └────────────────────┘       └──────────────────────────┘
+</div>
+
+<p class="section-intro">All four services auto-deploy from a single GitHub repository. A push to the <b>main</b> branch triggers simultaneous builds on Render (backends) and Vercel (frontends).</p>
+
+<h2>3. Deployment URLs</h2>
+
+<table>
+  <tr><th>Service</th><th>Platform</th><th>URL</th></tr>
+  <tr><td>EIMS Frontend</td><td>Vercel</td><td>https://eims-frontend-sand.vercel.app</td></tr>
+  <tr><td>Bank Frontend</td><td>Vercel</td><td>https://bank-frontend-seven.vercel.app</td></tr>
+  <tr><td>EIMS Backend</td><td>Render</td><td>https://eims-backend-83ds.onrender.com</td></tr>
+  <tr><td>Bank Backend</td><td>Render</td><td>https://bank-backend-lf04.onrender.com</td></tr>
+  <tr><td>Database</td><td>Supabase</td><td>Project: faevzoqhmkyjxnjvgnpr (Tokyo Region)</td></tr>
+  <tr><td>Source Code</td><td>GitHub</td><td>https://github.com/VikranthMallru/ERP-CLONE-PROJECT-DBMS</td></tr>
+</table>
+
+<h2>4. Platform Selection</h2>
+
+<table>
+  <tr><th>Platform</th><th>Role</th><th>Reason for Selection</th></tr>
+  <tr><td>Supabase</td><td>PostgreSQL Database</td><td>Free managed PostgreSQL with built-in SQL Editor, connection pooling, and dashboard for database administration</td></tr>
+  <tr><td>Render</td><td>Backend Hosting</td><td>Free tier for Node.js web services with auto-deploy from GitHub, environment variable management, and logging</td></tr>
+  <tr><td>Vercel</td><td>Frontend Hosting</td><td>Free tier optimized for React apps with instant deployments, global CDN, and GitHub integration</td></tr>
+  <tr><td>GitHub</td><td>Version Control &amp; CI/CD</td><td>Central repository that triggers automatic deployments on both Render and Vercel upon every push</td></tr>
+</table>
+
+<div class="page-break"></div>
+
+<h2>5. Database Setup (Supabase)</h2>
+
+<p class="section-intro">The database was configured by executing two SQL scripts in the Supabase SQL Editor:</p>
+
+<h3>5.1 Schema Script (supabase_schema.sql)</h3>
+<p class="section-intro">Created 35 tables across two modules:</p>
+
+<table>
+  <tr><th>Module</th><th>Tables (Count)</th><th>Key Tables</th></tr>
+  <tr><td>EIMS</td><td>31</td><td>Users, Students, Faculty, Courses, Course_Offerings, Course_Allotted, Attendance, Grades, Results, Feedback, Leave_Requests, Fee_Payment, Exams, Rooms, Scheduled_class, System_Config, CDC</td></tr>
+  <tr><td>Bank</td><td>4</td><td>Customers, Accounts, Transactions, Transfers</td></tr>
+  <tr><td>Auto-created</td><td>1</td><td>Admin_Query_Logs (created by backend on startup)</td></tr>
+</table>
+
+<h3>5.2 Extras Script (supabase_extras.sql)</h3>
+<p class="section-intro">Created all database objects for business logic:</p>
+
+<table>
+  <tr><th>Object Type</th><th>Count</th><th>Examples</th></tr>
+  <tr><td>Views</td><td>21</td><td>Student_Course_View, Student_Attendance_Summary, Faculty_Courses_Taught, Student_Timetable_View, Current_Sem_SGPA</td></tr>
+  <tr><td>Triggers</td><td>19</td><td>trg_course_approval, trg_leave_approved, trg_update_balance, trg_create_backlog, trg_results_declared, trg_create_account</td></tr>
+  <tr><td>Functions</td><td>32</td><td>make_payment, upload_grade, apply_leave, submit_feedback, mark_attendance, apply_fee_remission</td></tr>
+  <tr><td>Procedures</td><td>3</td><td>mark_attendance, insert_bookings, and others</td></tr>
+  <tr><td>Constraints</td><td>25+</td><td>Foreign keys, CHECK constraints, UNIQUE constraints across all tables</td></tr>
+</table>
+
+<h3>5.3 Schema Fixes Applied</h3>
+<ul>
+  <li><b>Leave_Requests.request_id</b> — Changed to SERIAL for auto-increment</li>
+  <li><b>booked_class.booking_date</b> — Added column with DEFAULT CURRENT_DATE</li>
+  <li><b>transactions.type</b> — Renamed to <b>transaction_type</b> (PostgreSQL reserved word conflict)</li>
+  <li><b>Bank tables</b> — Completely rewritten with Customers (SERIAL PK + password), Accounts (SERIAL), proper foreign keys</li>
+</ul>
+
+<h2>6. Backend Deployment (Render)</h2>
+
+<h3>6.1 EIMS Backend</h3>
+<table>
+  <tr><th>Setting</th><th>Value</th></tr>
+  <tr><td>Platform</td><td>Render — Free Web Service</td></tr>
+  <tr><td>Runtime</td><td>Node.js / Express</td></tr>
+  <tr><td>Build Command</td><td>npm install</td></tr>
+  <tr><td>Start Command</td><td>node app.js</td></tr>
+  <tr><td>Root Directory</td><td>eims-backend</td></tr>
+  <tr><td>Auto-Deploy</td><td>Enabled — triggers on push to main branch</td></tr>
+</table>
+
+<h3>6.2 Bank Backend</h3>
+<table>
+  <tr><th>Setting</th><th>Value</th></tr>
+  <tr><td>Platform</td><td>Render — Free Web Service</td></tr>
+  <tr><td>Runtime</td><td>Node.js / Express</td></tr>
+  <tr><td>Build Command</td><td>npm install</td></tr>
+  <tr><td>Start Command</td><td>node bank-app.js</td></tr>
+  <tr><td>Root Directory</td><td>eims-backend</td></tr>
+  <tr><td>Auto-Deploy</td><td>Enabled — triggers on push to main branch</td></tr>
+</table>
+
+<h3>6.3 Backend Environment Variables</h3>
+<table>
+  <tr><th>Variable</th><th>Purpose</th></tr>
+  <tr><td>DATABASE_URL</td><td>Supabase PostgreSQL session pooler connection string (IPv4)</td></tr>
+  <tr><td>BANK_FRONTEND_URL</td><td>Bank frontend URL for payment redirects</td></tr>
+  <tr><td>EIMS_BACKEND_URL</td><td>Self-reference URL for cross-service communication</td></tr>
+  <tr><td>NODE_ENV</td><td>Set to "production"</td></tr>
+</table>
+
+<h3>6.4 API Endpoints Summary</h3>
+<table>
+  <tr><th>Category</th><th>Endpoints</th><th>Key Functionality</th></tr>
+  <tr><td>Authentication</td><td>/signup, /login</td><td>Role-based signup with profile fields, bcrypt password hashing</td></tr>
+  <tr><td>Student Profile</td><td>/student/profile, /student/profile/:id</td><td>View and update student information</td></tr>
+  <tr><td>Faculty Profile</td><td>/faculty/profile, /faculty/profile/:id</td><td>View and update faculty information</td></tr>
+  <tr><td>Course Registration</td><td>/student/registrations/:id, /student/registration</td><td>Course selection and registration management</td></tr>
+  <tr><td>Course Approval</td><td>/faculty/pending/:id, /faculty/approve</td><td>Faculty advisor approval workflow with trigger verification</td></tr>
+  <tr><td>Attendance</td><td>/faculty/mark-attendance, /student/:id/attendance</td><td>Mark and view attendance with multiple input formats</td></tr>
+  <tr><td>Grades &amp; Results</td><td>/faculty/upload-grades, /student/:id/results, /student/:id/grades</td><td>Grade upload, CGPA calculation, semester-wise grades</td></tr>
+  <tr><td>Fee Management</td><td>/student/:id/fee-status, /student/:id/pay, /student/payment-success</td><td>Fee status, bank payment redirect, payment recording</td></tr>
+  <tr><td>Leave Management</td><td>/student/apply-leave, /faculty/:id/leave-requests, /faculty/leave-action</td><td>Leave application and faculty approval</td></tr>
+  <tr><td>Timetable &amp; Scheduling</td><td>/student/:id/timetable, /faculty/:id/schedule</td><td>Student and faculty weekly schedules</td></tr>
+  <tr><td>Room Booking</td><td>/faculty/available-slots, /faculty/buildings, /faculty/book-class, /faculty/book-rooms</td><td>Building/room lookup and class scheduling</td></tr>
+  <tr><td>Exams</td><td>/student/:id/exams, /student/:id/supplementary-exams</td><td>Exam schedule and supplementary exam listing</td></tr>
+  <tr><td>Feedback</td><td>/student/submit-feedback, /faculty/course/:id/feedbacks</td><td>Student feedback submission and faculty viewing</td></tr>
+  <tr><td>Admin</td><td>/admin/run-query, /admin/declare-results, /admin/system-config</td><td>SQL console with security controls, result declaration, system configuration</td></tr>
+</table>
+
+<div class="page-break"></div>
+
+<h2>7. Frontend Deployment (Vercel)</h2>
+
+<h3>7.1 EIMS Frontend</h3>
+<table>
+  <tr><th>Setting</th><th>Value</th></tr>
+  <tr><td>Framework</td><td>React (Create React App)</td></tr>
+  <tr><td>Root Directory</td><td>eims-frontend</td></tr>
+  <tr><td>REACT_APP_API_URL</td><td>https://eims-backend-83ds.onrender.com</td></tr>
+  <tr><td>REACT_APP_BANK_URL</td><td>https://bank-frontend-seven.vercel.app</td></tr>
+  <tr><td>CI</td><td>false (prevents ESLint warnings from blocking builds)</td></tr>
+</table>
+
+<h3>7.2 Bank Frontend</h3>
+<table>
+  <tr><th>Setting</th><th>Value</th></tr>
+  <tr><td>Framework</td><td>React (Create React App)</td></tr>
+  <tr><td>Root Directory</td><td>bank-frontend</td></tr>
+  <tr><td>REACT_APP_API_URL</td><td>https://bank-backend-lf04.onrender.com</td></tr>
+  <tr><td>REACT_APP_EIMS_URL</td><td>https://eims-frontend-sand.vercel.app</td></tr>
+  <tr><td>CI</td><td>false</td></tr>
+</table>
+
+<h3>7.3 Frontend Pages &amp; Components</h3>
+
+<table>
+  <tr><th>Role</th><th>Pages / Components</th><th>Functionality</th></tr>
+  <tr><td>Student</td><td>Dashboard, Profile, Course Registrations, Courses, Timetable, Fee Status, Exams, Supplementary Exams, Backlogs, Leave Request, Feedback, CDC, Attendance Dashboard, Results</td><td>Complete student lifecycle — registration, academics, finances, attendance</td></tr>
+  <tr><td>Faculty</td><td>Faculty Dashboard, My Profile, My Schedule, Courses, Current Courses, Mark Attendance, Upload Grades, Leave Approvals, Course Approvals, Room Booking, Feedback Review</td><td>Teaching management — courses, attendance, grading, scheduling</td></tr>
+  <tr><td>Admin</td><td>Admin Dashboard, SQL Console</td><td>Database administration with query execution, history, and CSV export</td></tr>
+  <tr><td>Bank</td><td>Bank Login, Bank Signup, Bank Dashboard, Payment Confirm, Payment Success</td><td>Integrated banking for fee payments with account management</td></tr>
+</table>
+
+<h2>8. Issues Encountered &amp; Resolutions</h2>
+
+<table>
+  <tr><th>#</th><th>Issue</th><th>Root Cause</th><th>Resolution</th></tr>
+  <tr><td>1</td><td>Backend could not connect to Supabase database</td><td>Render free tier uses IPv4 only; Supabase direct connection uses IPv6</td><td>Switched to Supabase Session Pooler URL which supports IPv4</td></tr>
+  <tr><td>2</td><td>Vercel frontend build failing</td><td>CI=true (default) treats ESLint warnings as errors</td><td>Added CI=false as environment variable on Vercel</td></tr>
+  <tr><td>3</td><td>GitHub push returning 403 Forbidden</td><td>Personal Access Token lacked "repo" scope permission</td><td>Regenerated PAT with correct repository permissions</td></tr>
+  <tr><td>4</td><td>GitHub push blocked by file size limit</td><td>156 MB zip file was being tracked by git</td><td>Removed file from tracking and added to .gitignore</td></tr>
+  <tr><td>5</td><td>Student profile update returning 500 error</td><td>Empty strings for integer FK columns (department_id) caused PostgreSQL type cast error</td><td>Applied "|| null" coalescing to convert empty strings to NULL</td></tr>
+  <tr><td>6</td><td>Transaction queries failing</td><td>"type" is a PostgreSQL reserved word used as column name</td><td>Renamed column to "transaction_type" in schema and all backend code</td></tr>
+  <tr><td>7</td><td>Backend failing to start on Render</td><td>Incorrect start command (npm app.js instead of node app.js)</td><td>Corrected start command to "node app.js"</td></tr>
+</table>
+
+<h2>9. Security Measures</h2>
+
+<ul>
+  <li><b>Password Hashing:</b> All passwords hashed using bcrypt with salt rounds of 10</li>
+  <li><b>Password Policy:</b> Minimum 8 characters, at least 1 uppercase letter, 1 number, and 1 special character</li>
+  <li><b>SQL Console Security:</b> Admin role verification, DDL/DCL operations blocked (DROP, ALTER, TRUNCATE, CREATE, GRANT, REVOKE), SELECT results capped at 100 rows, 5-second query timeout, all queries logged to Admin_Query_Logs</li>
+  <li><b>Input Validation:</b> course_offering_id coerced to integer, empty strings converted to NULL for FK fields</li>
+  <li><b>Environment Variables:</b> Database credentials and API URLs stored as environment variables, never hardcoded</li>
+  <li><b>CORS:</b> Cross-origin resource sharing enabled for frontend-backend communication</li>
+</ul>
+
+<h2>10. Deployment Workflow</h2>
+
+<p class="section-intro">The project uses a fully automated CI/CD pipeline:</p>
+
+<div class="highlight">
+  <b>Step 1:</b> Edit code locally in VS Code<br>
+  <b>Step 2:</b> Stage and commit changes: git add -A &amp;&amp; git commit -m "description"<br>
+  <b>Step 3:</b> Push to GitHub: git push origin main<br>
+  <b>Step 4:</b> Render auto-deploys both backends (~2–5 minutes)<br>
+  <b>Step 5:</b> Vercel auto-deploys both frontends (~1–2 minutes)<br>
+  <b>Step 6:</b> Verify at live URLs — no manual redeploy needed
+</div>
+
+<h2>11. Conclusion</h2>
+<p class="section-intro">
+  The ERP Clone Project was successfully deployed to production using a three-platform architecture — Supabase for the database, Render for backend services, and Vercel for frontend hosting. All four services are live, connected, and auto-deploy from a single GitHub repository. The database contains 36 tables, 21 views, 19 triggers, and 35 functions supporting the complete EIMS and Banking workflows. Seven deployment issues were identified and resolved during the hosting process, and security measures were implemented across all layers of the application.
+</p>
+
+</body>
+</html>

@@ -187,7 +187,7 @@ $$ LANGUAGE plpgsql;
 -- Add Exam
 CREATE OR REPLACE FUNCTION add_exam(
     p_course_offering_id INT,
-    p_room_number VARCHAR,
+    p_room_number INT,
     p_building_name VARCHAR,
     p_date DATE
 )
@@ -379,32 +379,36 @@ BEGIN
 END;
 $$;
 
--- Update CGPA for all students
+-- Update CGPA for all students (recalculates from all grades)
 CREATE OR REPLACE FUNCTION update_cgpa_all_students()
 RETURNS VOID AS $$
 BEGIN
     INSERT INTO Results (student_id, cgpa, total_credits)
     SELECT
         s.student_id,
-        ((COALESCE(r.cgpa,0) * COALESCE(r.total_credits,0)) +
-            SUM(c.credits *
-                CASE g.grade
-                    WHEN 'Ex' THEN 10 WHEN 'A' THEN 9 WHEN 'B' THEN 8
-                    WHEN 'C' THEN 7 WHEN 'D' THEN 6 WHEN 'E' THEN 5
-                    WHEN 'P' THEN 4 ELSE 0
-                END
+        CASE
+            WHEN SUM(CASE WHEN g.grade <> 'F' THEN c.credits ELSE 0 END) = 0 THEN 0
+            ELSE ROUND(
+                SUM(
+                    c.credits *
+                    CASE g.grade
+                        WHEN 'Ex' THEN 10 WHEN 'A' THEN 9 WHEN 'B' THEN 8
+                        WHEN 'C' THEN 7 WHEN 'D' THEN 6 WHEN 'E' THEN 5
+                        WHEN 'P' THEN 4 ELSE 0
+                    END
+                )::NUMERIC /
+                SUM(CASE WHEN g.grade <> 'F' THEN c.credits ELSE 0 END)::NUMERIC,
+                2
             )
-        ) / NULLIF(COALESCE(r.total_credits,0) +
-            SUM(CASE WHEN g.grade <> 'F' THEN c.credits ELSE 0 END), 0
-        ) AS cgpa,
-        COALESCE(r.total_credits,0) +
-            SUM(CASE WHEN g.grade <> 'F' THEN c.credits ELSE 0 END) AS total_credits
+        END AS cgpa,
+        SUM(
+            CASE WHEN g.grade <> 'F' THEN c.credits ELSE 0 END
+        ) AS total_credits
     FROM Students s
-    LEFT JOIN Results r ON s.student_id = r.student_id
     JOIN Grades g ON s.student_id = g.student_id
-    JOIN Course_Offerings co ON g.course_offering_id = co.course_offering_id AND co.semester = s.semester
+    JOIN Course_Offerings co ON g.course_offering_id = co.course_offering_id
     JOIN Courses c ON co.course_id = c.course_id
-    GROUP BY s.student_id, r.cgpa, r.total_credits
+    GROUP BY s.student_id
     ON CONFLICT (student_id)
     DO UPDATE SET cgpa = EXCLUDED.cgpa, total_credits = EXCLUDED.total_credits;
 END;
@@ -595,7 +599,8 @@ CREATE OR REPLACE FUNCTION update_balance_after_payment()
 RETURNS TRIGGER AS $$
 BEGIN
     UPDATE Balance SET remaining_balance = remaining_balance - NEW.amount_paid
-    WHERE student_id = NEW.student_id;
+    WHERE student_id = NEW.student_id
+      AND NEW.payment_date = (SELECT MAX(payment_date) FROM Fee_Payment WHERE student_id = NEW.student_id);
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
@@ -603,15 +608,42 @@ $$ LANGUAGE plpgsql;
 CREATE TRIGGER trg_update_balance
 AFTER INSERT ON Fee_Payment FOR EACH ROW EXECUTE FUNCTION update_balance_after_payment();
 
--- Room capacity check for exams
+-- Room capacity check for exams (checks across all exams on same date/room)
 CREATE OR REPLACE FUNCTION check_room_capacity()
 RETURNS TRIGGER AS $$
-DECLARE room_cap INT; students INT; room_no INT; building TEXT;
+DECLARE
+    room_cap INT;
+    students INT;
+    room_no INT;
+    exam_date DATE;
+    building TEXT;
 BEGIN
-    SELECT room_number, building_name INTO room_no, building FROM Exams WHERE exam_id = NEW.exam_id;
-    SELECT capacity INTO room_cap FROM Rooms WHERE room_number = room_no AND building_name = building;
-    SELECT COUNT(*) INTO students FROM Exam_Seating WHERE exam_id = NEW.exam_id;
-    IF students >= room_cap THEN RAISE EXCEPTION 'Room capacity exceeded for exam %', NEW.exam_id; END IF;
+    -- get exam details
+    SELECT room_number, building_name, date_of_exam
+    INTO room_no, building, exam_date
+    FROM Exams
+    WHERE exam_id = NEW.exam_id;
+
+    -- get room capacity
+    SELECT capacity INTO room_cap
+    FROM Rooms
+    WHERE room_number = room_no
+      AND building_name = building;
+
+    -- count ALL students in same room + date (across all exams)
+    SELECT COUNT(*) INTO students
+    FROM Exam_Seating es
+    JOIN Exams e ON e.exam_id = es.exam_id
+    WHERE e.room_number = room_no
+      AND e.building_name = building
+      AND e.date_of_exam = exam_date;
+
+    -- capacity check
+    IF students + 1 > room_cap THEN
+        RAISE EXCEPTION 'Room capacity exceeded for % % on %',
+            building, room_no, exam_date;
+    END IF;
+
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
@@ -940,7 +972,8 @@ SELECT
     c.course_name,
     co.course_offering_id,
     co.semester,
-    co.year_offering
+    co.year_offering,
+    co.capacity
 FROM Course_Offerings co
 JOIN Courses c ON co.course_id = c.course_id;
 
