@@ -45,38 +45,9 @@ const CourseFeedback = () => {
     }
   };
 
-  const calculateStats = () => {
-    if (!feedbackData || feedbackData.length === 0) return null;
-
-    const totalFeedback = feedbackData.length;
-    const avgRating =
-      feedbackData.reduce((sum, f) => sum + (f.rating || 0), 0) / totalFeedback;
-
-    const sentimentCount = {
-      positive: feedbackData.filter((f) => f.sentiment === 'positive').length,
-      neutral: feedbackData.filter((f) => f.sentiment === 'neutral').length,
-      negative: feedbackData.filter((f) => f.sentiment === 'negative').length
-    };
-
-    return {
-      totalFeedback,
-      avgRating: avgRating.toFixed(2),
-      sentimentCount
-    };
-  };
-
-  const stats = calculateStats();
-
-  const getSentimentBadge = (sentiment) => {
-    switch (sentiment) {
-      case 'positive':
-        return <span className="badge bg-success">Positive</span>;
-      case 'negative':
-        return <span className="badge bg-danger">Negative</span>;
-      default:
-        return <span className="badge bg-warning">Neutral</span>;
-    }
-  };
+  const courseInfo = feedbackData && feedbackData.length > 0
+    ? { id: feedbackData[0].course_offering_id, name: feedbackData[0].course_name }
+    : null;
 
   return (
     <div className="course-feedback">
@@ -115,60 +86,18 @@ const CourseFeedback = () => {
               </div>
             ) : feedbackData && feedbackData.length > 0 ? (
               <>
-                <div className="stats-cards">
-                  <div className="stat-card">
-                    <h6>Total Feedback</h6>
-                    <h4>{stats.totalFeedback}</h4>
+                {courseInfo && (
+                  <div className="mb-3">
+                    <strong>Course:</strong> {courseInfo.name} &nbsp; 
+                    <small className="text-muted">(ID: {courseInfo.id})</small>
                   </div>
-                  <div className="stat-card">
-                    <h6>Average Rating</h6>
-                    <h4>
-                      {stats.avgRating}
-                      <span className="small">/5.0</span>
-                    </h4>
-                  </div>
-                  <div className="stat-card">
-                    <h6>Positive</h6>
-                    <h4 className="text-success">{stats.sentimentCount.positive}</h4>
-                  </div>
-                  <div className="stat-card">
-                    <h6>Neutral</h6>
-                    <h4 className="text-warning">{stats.sentimentCount.neutral}</h4>
-                  </div>
-                  <div className="stat-card">
-                    <h6>Negative</h6>
-                    <h4 className="text-danger">{stats.sentimentCount.negative}</h4>
-                  </div>
-                </div>
+                )}
 
                 <h5 className="mt-4 mb-3">Student Feedback</h5>
                 <div className="feedback-list">
-                  {feedbackData.map((feedback, index) => (
+                  {feedbackData.map((fb, index) => (
                     <div key={index} className="feedback-card">
-                      <div className="feedback-header">
-                        <div className="student-info">
-                          <strong>{feedback.student_name}</strong>
-                          <small className="text-muted">ID: {feedback.student_id}</small>
-                        </div>
-                        <div className="feedback-meta">
-                          {getSentimentBadge(feedback.sentiment)}
-                          {feedback.rating && (
-                            <span className="rating-badge">
-                              ⭐ {feedback.rating}/5
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                      <p className="feedback-text">{feedback.feedback_text}</p>
-                      {feedback.suggestions && (
-                        <div className="suggestions-section">
-                          <strong>Suggestions:</strong>
-                          <p>{feedback.suggestions}</p>
-                        </div>
-                      )}
-                      <small className="text-muted">
-                        {new Date(feedback.submission_date).toLocaleDateString()}
-                      </small>
+                      <p className="feedback-text">{fb.feedback}</p>
                     </div>
                   ))}
                 </div>

@@ -1,155 +1,255 @@
-/* Timetable Grid Styling */
+.timetable-container {
+  padding: 0;
+}
 
-.timetable-grid {
-  overflow-x: auto;
-  margin-bottom: 20px;
+.schedule-summary {
+  margin-bottom: 1.5rem;
+}
+
+.summary-card {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 1.5rem;
+  border-radius: 8px;
+  text-align: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.summary-card h6 {
+  font-size: 0.9rem;
+  margin-bottom: 0.5rem;
+  opacity: 0.9;
+}
+
+.summary-card h4 {
+  font-size: 2rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+/* Timetable Styling */
+.table-responsive {
+  border-radius: 8px;
+  overflow: hidden;
   border: 1px solid #dee2e6;
-  border-radius: 4px;
 }
 
-.timetable-wrapper {
-  min-width: 100%;
-}
-
-.timetable-table {
-  margin-bottom: 0;
-  border-collapse: collapse;
-  font-size: 13px;
+.timetable {
   width: 100%;
+  border-collapse: collapse;
+  background: white;
+  margin: 0;
+  font-size: 0.95rem;
 }
 
-.timetable-table thead {
+.timetable thead {
   position: sticky;
   top: 0;
   z-index: 10;
 }
 
-.timetable-table th {
-  background-color: #f8f9fa;
-  border: 1px solid #dee2e6;
-  padding: 12px 4px !important;
+.timetable th {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 1rem;
   text-align: center;
   font-weight: 600;
-  color: #0c5460;
+  border: 1px solid #667eea;
 }
 
-.timetable-table td {
-  border: 1px solid #dee2e6;
-  padding: 8px !important;
-  min-height: 50px;
-  vertical-align: top;
-}
-
-.time-col {
-  width: 90px;
-  min-width: 90px;
-  background-color: #f8f9fa;
-  font-weight: 600;
+.time-header {
+  min-width: 120px;
   position: sticky;
   left: 0;
-  z-index: 5;
+  z-index: 11;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
 }
 
-.day-col {
-  width: 150px;
-  min-width: 150px;
+.day-header {
+  min-width: 140px;
 }
 
-.day-full {
-  font-size: 13px;
+.time-cell {
+  background: #f8f9fa;
+  padding: 0.8rem;
+  text-align: center;
+  border: 1px solid #dee2e6;
+  position: sticky;
+  left: 0;
+  z-index: 9;
+  min-width: 120px;
   font-weight: 600;
-  color: #0c5460;
+  color: #495057;
 }
 
-.class-cell {
-  transition: background-color 0.2s ease;
+.schedule-cell {
+  border: 1px solid #dee2e6;
+  padding: 0.6rem;
+  vertical-align: top;
+  min-height: 90px;
+  background: #bbdefb;
   position: relative;
+  transition: all 0.2s ease;
 }
 
-.class-cell:hover {
-  box-shadow: inset 0 0 10px rgba(33, 150, 243, 0.1);
+.schedule-cell:hover {
+  background-color: #90caf9;
+  box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.1);
 }
 
-.class-slot {
-  padding: 6px 8px;
-  border-radius: 3px;
-  background: white;
-  border-left: 4px solid #2196f3;
-  height: 100%;
+.class-content {
   display: flex;
   flex-direction: column;
-  justify-content: flex-start;
+  gap: 0.3rem;
+  height: 100%;
+  justify-content: center;
 }
 
 .course-name {
-  font-size: 13px;
   font-weight: 600;
   color: #1565c0;
-  margin-bottom: 3px;
-  word-wrap: break-word;
-  max-width: 130px;
+  font-size: 0.9rem;
+  line-height: 1.3;
 }
 
-.class-time {
-  font-size: 11px;
+.location-info {
+  font-size: 0.8rem;
+  color: #424242;
+  margin: 0.2rem 0;
+}
+
+.time-info {
+  font-size: 0.75rem;
   color: #666;
-  margin-bottom: 3px;
+  font-weight: 500;
 }
 
-.class-location {
-  font-size: 11px;
-  color: #666;
+.empty-cell {
+  border: 1px solid #dee2e6;
+  background: white;
+  min-height: 90px;
 }
 
-/* Responsive adjustments */
-@media (max-width: 1024px) {
-  .timetable-table {
-    font-size: 12px;
+/* Responsive Design */
+@media (max-width: 1200px) {
+  .timetable {
+    font-size: 0.9rem;
   }
-  
-  .time-col {
-    width: 80px;
-    min-width: 80px;
+
+  .timetable th,
+  .timetable td {
+    padding: 0.7rem 0.5rem;
   }
-  
-  .day-col {
-    width: 120px;
+
+  .time-header,
+  .time-cell {
+    min-width: 100px;
+    padding: 0.7rem 0.4rem;
+  }
+
+  .day-header {
     min-width: 120px;
   }
-  
+
+  .schedule-cell {
+    min-height: 80px;
+  }
+
   .course-name {
-    max-width: 110px;
-    font-size: 12px;
+    font-size: 0.85rem;
+  }
+
+  .location-info {
+    font-size: 0.75rem;
+  }
+
+  .time-info {
+    font-size: 0.7rem;
+  }
+}
+
+@media (max-width: 992px) {
+  .timetable {
+    font-size: 0.85rem;
+  }
+
+  .timetable th,
+  .timetable td {
+    padding: 0.6rem 0.4rem;
+  }
+
+  .time-header,
+  .time-cell {
+    min-width: 80px;
+    padding: 0.6rem 0.3rem;
+  }
+
+  .day-header {
+    min-width: 100px;
+    padding: 0.6rem 0.3rem;
+  }
+
+  .schedule-cell {
+    min-height: 70px;
+    padding: 0.5rem;
+  }
+
+  .course-name {
+    font-size: 0.8rem;
+  }
+
+  .location-info {
+    font-size: 0.7rem;
+  }
+
+  .time-info {
+    font-size: 0.65rem;
   }
 }
 
 @media (max-width: 768px) {
-  .timetable-table {
-    font-size: 11px;
+  .timetable {
+    font-size: 0.8rem;
   }
-  
-  .time-col {
-    width: 70px;
+
+  .timetable th,
+  .timetable td {
+    padding: 0.5rem 0.3rem;
+  }
+
+  .time-header,
+  .time-cell {
     min-width: 70px;
-    padding: 6px 2px !important;
+    padding: 0.5rem 0.2rem;
+    font-size: 0.75rem;
   }
-  
-  .day-col {
-    width: 100px;
-    min-width: 100px;
+
+  .day-header {
+    min-width: 80px;
+    padding: 0.5rem 0.2rem;
+    font-size: 0.8rem;
   }
-  
-  .day-full {
-    font-size: 11px;
+
+  .schedule-cell {
+    min-height: 60px;
+    padding: 0.4rem;
   }
-  
+
   .course-name {
-    max-width: 90px;
-    font-size: 11px;
+    font-size: 0.75rem;
   }
-  
-  .class-time,
-  .class-location {
-    font-size: 10px !important;
+
+  .location-info {
+    font-size: 0.65rem;
+    display: none;
+  }
+
+  .time-info {
+    font-size: 0.6rem;
+  }
+
+  .summary-card {
+    padding: 1rem;
   }
 }
+

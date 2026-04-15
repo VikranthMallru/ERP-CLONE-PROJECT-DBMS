@@ -112,11 +112,11 @@ const LeaveRequest = ({ studentId }) => {
     if (!status) return <span className="badge bg-warning">Pending</span>;
     const s = status.toString().toLowerCase();
     switch (s) {
-      case 'approved':
+      case 'Approved':
         return <span className="badge bg-success">Approved</span>;
-      case 'rejected':
+      case 'Rejected':
         return <span className="badge bg-danger">Rejected</span>;
-      case 'pending':
+      case 'Pending':
         return <span className="badge bg-warning">Pending</span>;
       default:
         return <span className="badge bg-secondary">{status}</span>;
@@ -174,6 +174,11 @@ const LeaveRequest = ({ studentId }) => {
           <i className="bi bi-plus-circle"></i> Apply for Leave
         </button>
       </div>
+      <div className="status-buttons mb-3">
+        <button className="btn btn-warning me-2" disabled>Pending</button>
+        <button className="btn btn-success me-2" disabled>Approved</button>
+        <button className="btn btn-danger" disabled>Rejected</button>
+      </div>
 
       {/* Leave History Tab */}
       {activeTab === 'history' && (
@@ -202,9 +207,9 @@ const LeaveRequest = ({ studentId }) => {
                     <tr
                       key={index}
                       className={
-                        leave.status === 'approved'
+                        leave.status === 'Approved'
                           ? 'table-success'
-                          : leave.status === 'rejected'
+                          : leave.status === 'Rejected'
                           ? 'table-danger'
                           : ''
                       }

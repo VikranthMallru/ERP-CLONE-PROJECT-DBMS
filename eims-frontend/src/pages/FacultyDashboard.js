@@ -11,6 +11,7 @@ import RoomBookings from '../components/faculty/RoomBookings';
 import FacultySchedule from '../components/faculty/FacultySchedule';
 import FacultyProfile from '../components/FacultyProfile';
 import './FacultyDashboard.css';
+import Navbar from '../components/Navbar';
 
 const FacultyDashboard = () => {
   const [activeTab, setActiveTab] = useState('overview');
@@ -68,11 +69,12 @@ const FacultyDashboard = () => {
 
   return (
     <div className="faculty-dashboard">
+      <Navbar />
       <div className="dashboard-header">
         <div className="header-content">
           <h1>Faculty Dashboard</h1>
           <p className="subtitle">Welcome, {facultyName || 'Faculty Member'}</p>
-          <button className="btn btn-danger btn-sm" onClick={handleLogout} style={{position: 'absolute', right: '20px', top: '20px'}}>Logout</button>
+          <button className="logout-btn" onClick={handleLogout} style={{float: 'right', background: '#d9534f', color: 'white', border: 'none', padding: '8px 16px', borderRadius: '4px', cursor: 'pointer', marginLeft: '20px'}}>Logout</button>
         </div>
       </div>
 
@@ -227,8 +229,8 @@ const FacultyDashboard = () => {
           )}
 
           {activeTab === 'profile' && <FacultyProfile userId={facultyId} />}
-          {activeTab === 'schedule' && <FacultySchedule />}
           {activeTab === 'courses' && <CourseManagement />}
+          {activeTab === 'schedule' && <FacultySchedule />}
           {activeTab === 'approvals' && <RegistrationApprovals />}
           {activeTab === 'attendance' && <AttendanceManagement />}
           {activeTab === 'grades' && <GradeManagement />}

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import API from '../services/api';
+import api from '../services/api';
 import '../styles/Results.css';
 
 export default function Results({ userId }) {
@@ -15,7 +15,7 @@ export default function Results({ userId }) {
 
   const fetchResults = async () => {
     try {
-      const response = await API.get(`/student/${userId}/results`);
+      const response = await api.get(`/student/${userId}/results`);
       setResults(response.data);
     } catch (err) {
       console.error('Error fetching results:', err);
@@ -25,7 +25,7 @@ export default function Results({ userId }) {
 
   const fetchGrades = async () => {
     try {
-      const response = await API.get(`/student/${userId}/grades`);
+      const response = await api.get(`/student/${userId}/grades`);
       setGrades(Array.isArray(response.data) ? response.data : []);
       setLoading(false);
     } catch (err) {

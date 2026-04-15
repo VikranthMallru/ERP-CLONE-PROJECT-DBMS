@@ -50,43 +50,47 @@ function Courses({ userId }) {
             <p className="text-muted mb-3">
               Total Courses: <strong>{courses.length}</strong>
             </p>
-            <div className="row">
-              {courses.map((course, index) => (
-                <div key={course.course_id} className="col-md-6 mb-3">
-                  <div className="card border-left-primary shadow h-100">
-                    <div className="card-body">
-                      <div className="d-flex align-items-center justify-content-between mb-2">
-                        <span className="badge bg-primary"># {index + 1}</span>
+            <div className="table-responsive">
+              <table className="table table-hover">
+                <thead className="table-light">
+                  <tr>
+                    <th>#</th>
+                    <th>Course Name</th>
+                    <th>Course Code</th>
+                    <th>Faculty</th>
+                    <th>Semester</th>
+                    <th>Credits</th>
+                    {courses.some(c => c.grade) && <th>Grade</th>}
+                  </tr>
+                </thead>
+                <tbody>
+                  {courses.map((course, index) => (
+                    <tr key={course.course_id}>
+                      <td>
+                        <span className="badge bg-primary">{index + 1}</span>
+                      </td>
+                      <td className="fw-bold">{course.course_name}</td>
+                      <td>
+                        <code>{course.course_id}</code>
+                      </td>
+                      <td>{course.faculty_name || "Not Assigned"}</td>
+                      <td>
                         <span className="badge bg-info">{course.semester} Sem</span>
-                      </div>
-                      <h6 className="card-title mb-2">{course.course_name}</h6>
-                      <p className="mb-2">
-                        <small>
-                          <strong>Course Code:</strong> {course.course_id}
-                        </small>
-                      </p>
-                      <p className="mb-2">
-                        <small>
-                          <strong>Faculty:</strong> {course.faculty_name || "Not Assigned"}
-                        </small>
-                      </p>
-                      <p className="mb-0">
-                        <small>
-                          <strong>Credits:</strong> {course.credits || "N/A"}
-                        </small>
-                      </p>
-                      {course.grade && (
-                        <p className="mt-2 mb-0">
-                          <small>
-                            <strong>Grade:</strong>{" "}
+                      </td>
+                      <td>{course.credits || "N/A"}</td>
+                      {courses.some(c => c.grade) && (
+                        <td>
+                          {course.grade ? (
                             <span className="badge bg-success">{course.grade}</span>
-                          </small>
-                        </p>
+                          ) : (
+                            <span className="text-muted">-</span>
+                          )}
+                        </td>
                       )}
-                    </div>
-                  </div>
-                </div>
-              ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           </>
         )}

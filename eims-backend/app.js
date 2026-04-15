@@ -103,13 +103,13 @@ cron.schedule('0 0 * * *', async () => {
   try {
 
     await pool.query(`
-      DELETE FROM exam_seatings
-      WHERE exam_date < CURRENT_DATE
+      DELETE FROM Exam_Seating
+      WHERE exam_id IN (SELECT exam_id FROM Exams WHERE date_of_exam < CURRENT_DATE)
     `);
 
     const result = await pool.query(`
-      DELETE FROM exams
-      WHERE exam_date < CURRENT_DATE
+      DELETE FROM Exams
+      WHERE date_of_exam < CURRENT_DATE
     `);
 
     console.log("Old exams deleted:", result.rowCount);

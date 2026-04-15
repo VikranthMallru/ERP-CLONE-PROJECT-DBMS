@@ -61,6 +61,7 @@ function Signup() {
     setError("");
     setSuccess("");
 
+    // Validation
     if (!role) {
       setError("Please select a role");
       return;
@@ -81,6 +82,7 @@ function Signup() {
       return;
     }
 
+    // Role-specific validation
     if (role === "Student" && !studentData.student_name) {
       setError("Please enter your name");
       return;
@@ -89,6 +91,10 @@ function Signup() {
     if (role === "Faculty" && !facultyData.faculty_name) {
       setError("Please enter your name");
       return;
+    }
+
+    if (role === "Admin" && role) {
+      // Admin just needs credentials
     }
 
     setLoading(true);
@@ -338,149 +344,153 @@ function Signup() {
   };
 
   return (
-    <div>
-      <h5 className="mb-4">Create New Account</h5>
-      <p className="text-muted mb-4">Please fill in all required fields to create your account</p>
+    <div className="card shadow">
+      <div className="card-header bg-primary text-white">
+        <h5 className="mb-0">Create New Account</h5>
+      </div>
+      <div className="card-body">
+        <p className="text-muted mb-4">Please fill in all required fields to create your account</p>
 
-      {error && (
-        <div className="alert alert-danger alert-dismissible fade show" role="alert">
-          {error}
-          <button type="button" className="btn-close" onClick={() => setError("")}></button>
-        </div>
-      )}
-
-      {success && (
-        <div className="alert alert-success alert-dismissible fade show" role="alert">
-          {success}
-          <button type="button" className="btn-close" onClick={() => setSuccess("")}></button>
-        </div>
-      )}
-
-      <form onSubmit={handleSignup}>
-        {/* Role Selection */}
-        <div className="mb-4">
-          <label className="form-label fw-bold">Choose Your Role *</label>
-          <div className="btn-group w-100" role="group">
-            <input 
-              type="radio" 
-              className="btn-check" 
-              name="role" 
-              id="roleStudent" 
-              value="Student"
-              checked={role === "Student"}
-              onChange={(e) => setRole(e.target.value)}
-              disabled={loading}
-            />
-            <label className="btn btn-outline-primary" htmlFor="roleStudent">
-              Student
-            </label>
-
-            <input 
-              type="radio" 
-              className="btn-check" 
-              name="role" 
-              id="roleFaculty" 
-              value="Faculty"
-              checked={role === "Faculty"}
-              onChange={(e) => setRole(e.target.value)}
-              disabled={loading}
-            />
-            <label className="btn btn-outline-primary" htmlFor="roleFaculty">
-              Faculty
-            </label>
-
-            <input 
-              type="radio" 
-              className="btn-check" 
-              name="role" 
-              id="roleAdmin" 
-              value="Admin"
-              checked={role === "Admin"}
-              onChange={(e) => setRole(e.target.value)}
-              disabled={loading}
-            />
-            <label className="btn btn-outline-primary" htmlFor="roleAdmin">
-              Admin
-            </label>
+        {error && (
+          <div className="alert alert-danger alert-dismissible fade show" role="alert">
+            {error}
+            <button type="button" className="btn-close" onClick={() => setError("")}></button>
           </div>
-        </div>
+        )}
 
-        <hr />
+        {success && (
+          <div className="alert alert-success alert-dismissible fade show" role="alert">
+            {success}
+            <button type="button" className="btn-close" onClick={() => setSuccess("")}></button>
+          </div>
+        )}
 
-        {/* Authentication Fields */}
-        <div className="auth-section mb-4">
-          <h6 className="mb-3 text-primary">Authentication Details</h6>
-          
-          <div className="mb-3">
-            <label className="form-label">User ID / Roll No / Faculty ID *</label>
-            <input
-              className="form-control"
-              placeholder={role === "Student" ? "Enter your roll number" : role === "Faculty" ? "Enter your faculty ID" : "Enter your user ID"}
-              value={user_id}
-              onChange={(e) => setUserId(e.target.value)}
-              disabled={loading}
-              required
-            />
+        <form onSubmit={handleSignup}>
+          {/* Role Selection */}
+          <div className="mb-4">
+            <label className="form-label fw-bold">Choose Your Role *</label>
+            <div className="btn-group w-100" role="group">
+              <input 
+                type="radio" 
+                className="btn-check" 
+                name="role" 
+                id="roleStudent" 
+                value="Student"
+                checked={role === "Student"}
+                onChange={(e) => setRole(e.target.value)}
+                disabled={loading}
+              />
+              <label className="btn btn-outline-primary" htmlFor="roleStudent">
+                👨‍🎓 Student
+              </label>
+
+              <input 
+                type="radio" 
+                className="btn-check" 
+                name="role" 
+                id="roleFaculty" 
+                value="Faculty"
+                checked={role === "Faculty"}
+                onChange={(e) => setRole(e.target.value)}
+                disabled={loading}
+              />
+              <label className="btn btn-outline-primary" htmlFor="roleFaculty">
+                👨‍🏫 Faculty
+              </label>
+
+              <input 
+                type="radio" 
+                className="btn-check" 
+                name="role" 
+                id="roleAdmin" 
+                value="Admin"
+                checked={role === "Admin"}
+                onChange={(e) => setRole(e.target.value)}
+                disabled={loading}
+              />
+              <label className="btn btn-outline-primary" htmlFor="roleAdmin">
+                ⚙️ Admin
+              </label>
+            </div>
           </div>
 
-          <div className="row mb-3">
-            <div className="col-md-6">
-              <label className="form-label">Password *</label>
+          <hr />
+
+          {/* Authentication Fields */}
+          <div className="auth-section mb-4">
+            <h6 className="mb-3 text-primary">Authentication Details</h6>
+            
+            <div className="mb-3">
+              <label className="form-label">User ID / Roll No / Faculty ID *</label>
               <input
-                type="password"
                 className="form-control"
-                placeholder="Enter password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                placeholder={role === "Student" ? "Enter your roll number" : role === "Faculty" ? "Enter your faculty ID" : "Enter your user ID"}
+                value={user_id}
+                onChange={(e) => setUserId(e.target.value)}
                 disabled={loading}
                 required
               />
             </div>
-            <div className="col-md-6">
-              <label className="form-label">Confirm Password *</label>
-              <input
-                type="password"
-                className="form-control"
-                placeholder="Confirm password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                disabled={loading}
-                required
-              />
+
+            <div className="row mb-3">
+              <div className="col-md-6">
+                <label className="form-label">Password *</label>
+                <input
+                  type="password"
+                  className="form-control"
+                  placeholder="Enter password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  disabled={loading}
+                  required
+                />
+              </div>
+              <div className="col-md-6">
+                <label className="form-label">Confirm Password *</label>
+                <input
+                  type="password"
+                  className="form-control"
+                  placeholder="Confirm password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  disabled={loading}
+                  required
+                />
+              </div>
             </div>
+
+            <small className="form-text text-muted d-block mb-3">
+              <strong>Password requirements:</strong>
+              <ul className="mb-0 ps-3">
+                <li>Minimum 8 characters</li>
+                <li>At least 1 uppercase letter</li>
+                <li>At least 1 number</li>
+                <li>At least 1 special character (!@#$%^&* etc)</li>
+              </ul>
+            </small>
           </div>
 
-          <small className="form-text text-muted d-block mb-3">
-            <strong>Password requirements:</strong>
-            <ul className="mb-0 ps-3">
-              <li>Minimum 8 characters</li>
-              <li>At least 1 uppercase letter</li>
-              <li>At least 1 number</li>
-              <li>At least 1 special character (!@#$%^&* etc)</li>
-            </ul>
-          </small>
-        </div>
+          <hr />
 
-        <hr />
+          {/* Role-specific Fields */}
+          {renderRoleFields()}
 
-        {/* Role-specific Fields */}
-        {renderRoleFields()}
-
-        <button 
-          type="submit" 
-          className="btn btn-success w-100 mt-3"
-          disabled={loading || !role}
-        >
-          {loading ? (
-            <>
-              <span className="spinner-border spinner-border-sm me-2"></span>
-              Creating account...
-            </>
-          ) : (
-            "Sign Up"
-          )}
-        </button>
-      </form>
+          <button 
+            type="submit" 
+            className="btn btn-success w-100 mt-3"
+            disabled={loading || !role}
+          >
+            {loading ? (
+              <>
+                <span className="spinner-border spinner-border-sm me-2"></span>
+                Creating account...
+              </>
+            ) : (
+              "Sign Up"
+            )}
+          </button>
+        </form>
+      </div>
     </div>
   );
 }

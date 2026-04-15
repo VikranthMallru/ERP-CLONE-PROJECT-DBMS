@@ -80,11 +80,13 @@ app.get('/login', (req, res) => {
 });
 
 app.post('/login', async (req, res) => {
-  const { identifier, password } = req.body;
+  const { account_id, identifier, password } = req.body;
 
   try {
     const result = await bankDB.query(
-      `SELECT * FROM Customers WHERE email = $1 OR name = $1`,
+      `SELECT c.*, a.account_id FROM Customers c
+       LEFT JOIN Accounts a ON c.customer_id = a.customer_id
+       WHERE (c.email = $1 OR c.name = $1)`,
       [identifier]
     );
 
@@ -94,6 +96,11 @@ app.post('/login', async (req, res) => {
 
     const user = result.rows[0];
 
+    // If account_id provided, verify it matches
+    if (account_id && String(user.account_id) !== String(account_id)) {
+      return res.status(401).json({ message: "Account ID does not match" });
+    }
+
     const isMatch = await bcrypt.compare(password, user.password);
 
     if (!isMatch) {
@@ -101,7 +108,8 @@ app.post('/login', async (req, res) => {
     }
 
     req.session.user = {
-      customer_id: user.customer_id
+      customer_id: user.customer_id,
+      account_id: user.account_id
     };
 
     res.json({

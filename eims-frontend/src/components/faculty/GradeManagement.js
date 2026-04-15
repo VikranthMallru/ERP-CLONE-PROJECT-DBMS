@@ -14,7 +14,7 @@ const GradeManagement = () => {
   const [csvFile, setCsvFile] = useState(null);
   const facultyId = localStorage.getItem('user_id');
 
-  const gradeOptions = ['A+', 'A', 'A-', 'B+', 'B', 'B-', 'C+', 'C', 'C-', 'D+', 'D', 'F'];
+  const gradeOptions = ['Ex', 'A', 'B', 'C', 'D', 'E', ,'P', 'F'];
 
   // Fetch current courses
   useEffect(() => {
@@ -69,7 +69,7 @@ const GradeManagement = () => {
       const gradesData = Object.keys(grades)
         .filter((studentId) => grades[studentId])
         .map((studentId) => ({
-          student_id: parseInt(studentId),
+          student_id: studentId,
           course_offering_id: selectedCourse,
           grade: grades[studentId]
         }));
@@ -81,6 +81,7 @@ const GradeManagement = () => {
       }
 
       await api.post('/faculty/upload-grades', {
+        course_offering_id:selectedCourse,
         grades: gradesData
       });
 

@@ -14,6 +14,8 @@ function BankSignup({ onSignupSuccess, onBackClick }) {
   const [loading, setLoading] = useState(false);
   const [showPin, setShowPin] = useState(false);
   const [showConfirmPin, setShowConfirmPin] = useState(false);
+  const [showAccountIdModal, setShowAccountIdModal] = useState(false);
+  const [newAccountId, setNewAccountId] = useState(null);
 
   const validateForm = () => {
     if (!fullName.trim()) {
@@ -77,7 +79,8 @@ function BankSignup({ onSignupSuccess, onBackClick }) {
       });
 
       if (res.data && res.data.account_id) {
-        setSuccess(`✅ Account created successfully! Account ID: ${res.data.account_id}`);
+        setNewAccountId(res.data.account_id);
+        setShowAccountIdModal(true);
         
         // Reset form
         setFullName('');
@@ -86,11 +89,6 @@ function BankSignup({ onSignupSuccess, onBackClick }) {
         setPin('');
         setConfirmPin('');
         setInitialBalance('1000');
-
-        // Redirect to login after 2 seconds
-        setTimeout(() => {
-          onSignupSuccess();
-        }, 2000);
       }
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to create account. Try again.');
@@ -100,7 +98,71 @@ function BankSignup({ onSignupSuccess, onBackClick }) {
   };
 
   return (
-    <div className="container d-flex justify-content-center align-items-center min-vh-100">
+    <>
+      {showAccountIdModal && (
+        <div
+          className="modal"
+          style={{
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%',
+            zIndex: 1000
+          }}
+        >
+          <div className="card" style={{ maxWidth: '500px', width: '90%' }}>
+            <div className="card-header bg-success text-white">
+              <h5 className="mb-0">✅ Account Created Successfully!</h5>
+            </div>
+            <div className="card-body text-center">
+              <p className="text-muted mb-3">Your new bank account has been created.</p>
+              <div
+                className="alert alert-info mb-4"
+                style={{ fontSize: '18px', padding: '20px' }}
+              >
+                <strong>Your Account ID:</strong>
+                <br />
+                <span
+                  style={{
+                    fontSize: '24px',
+                    fontWeight: 'bold',
+                    color: '#007bff',
+                    fontFamily: 'monospace',
+                    backgroundColor: '#f0f0f0',
+                    padding: '15px',
+                    borderRadius: '5px',
+                    display: 'block',
+                    marginTop: '10px'
+                  }}
+                >
+                  {newAccountId}
+                </span>
+              </div>
+              <p className="text-muted small mb-4">
+                <strong>⚠️ Please note and save this Account ID.</strong>
+                <br />
+                You will need it along with your PIN to login.
+              </p>
+              <button
+                className="btn btn-success btn-lg w-100"
+                onClick={() => {
+                  setShowAccountIdModal(false);
+                  onSignupSuccess();
+                }}
+              >
+                ✅ I have noted my Account ID
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className="container d-flex justify-content-center align-items-center min-vh-100">
       <div className="card shadow" style={{ width: '100%', maxWidth: '500px' }}>
         <div className="card-header bg-success text-white">
           <h5 className="mb-0">📝 Create Bank Account</h5>
@@ -257,7 +319,8 @@ function BankSignup({ onSignupSuccess, onBackClick }) {
           </div>
         </div>
       </div>
-    </div>
+      </div>
+    </>
   );
 }
 

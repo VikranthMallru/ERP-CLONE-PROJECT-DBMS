@@ -116,17 +116,13 @@ const CourseManagement = () => {
                       <tr>
                         <th>Student ID</th>
                         <th>Name</th>
-                        <th>Email</th>
-                        <th>Student Number</th>
                       </tr>
                     </thead>
                     <tbody>
                       {students.map((student) => (
                         <tr key={student.student_id}>
                           <td>{student.student_id}</td>
-                          <td>{student.name}</td>
-                          <td>{student.email}</td>
-                          <td>{student.student_number}</td>
+                          <td>{student.student_name}</td>
                         </tr>
                       ))}
                     </tbody>

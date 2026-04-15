@@ -15,12 +15,14 @@ const AdminSQLConsole = () => {
   const adminId = localStorage.getItem('user_id');
   const userRole = localStorage.getItem('role');
 
+  // Check admin access on mount
   useEffect(() => {
     if (userRole !== 'Admin') {
       setError('Access Denied: Admin privileges required');
     }
   }, [userRole]);
 
+  // Load query history from localStorage
   useEffect(() => {
     const savedHistory = localStorage.getItem('queryHistory');
     if (savedHistory) {
@@ -242,7 +244,7 @@ const AdminSQLConsole = () => {
               <div className="results-header">
                 <div className="results-info">
                   <span className="badge bg-info">
-                    {rowCount} rows &bull; {executionTime}ms
+                    {rowCount} rows • {executionTime}ms
                   </span>
                 </div>
                 <div className="results-actions">
@@ -318,7 +320,7 @@ const AdminSQLConsole = () => {
       <div className="security-notice">
         <div className="alert alert-warning mb-0">
           <h6>
-            <i className="bi bi-shield-exclamation"></i> Security &amp; Compliance
+            <i className="bi bi-shield-exclamation"></i> Security & Compliance
           </h6>
           <ul className="mb-0 mt-2">
             <li><strong>Allowed queries:</strong> SELECT, INSERT, UPDATE, DELETE</li>

@@ -28,6 +28,11 @@
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
+.table-responsive {
+  overflow-x: auto;
+  margin-bottom: 20px;
+}
+
 .timetable {
   width: 100%;
   border-collapse: collapse;
@@ -115,7 +120,7 @@
   font-size: 0.85rem;
   font-weight: 600;
   color: #1565c0;
-  white-space: normal;
+  white-space: wrap;
   word-break: break-word;
 }
 
@@ -144,6 +149,7 @@
   border-radius: 4px;
 }
 
+/* Schedule Summary */
 .schedule-summary {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -175,6 +181,7 @@
   margin: 0;
 }
 
+/* Responsive Design */
 @media (max-width: 992px) {
   .timetable {
     font-size: 0.85rem;

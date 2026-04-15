@@ -2,6 +2,7 @@ import { useState } from 'react';
 import API from '../services/api';
 
 function BankLogin({ onLoginSuccess, onSignupClick }) {
+  const [accountId, setAccountId] = useState('');
   const [identifier, setIdentifier] = useState('');
   const [pin, setPin] = useState('');
   const [error, setError] = useState('');
@@ -11,8 +12,8 @@ function BankLogin({ onLoginSuccess, onSignupClick }) {
   const handleLogin = async (e) => {
     e.preventDefault();
     
-    if (!identifier || !pin) {
-      setError('Account ID/Email and PIN are required');
+    if (!accountId || !identifier || !pin) {
+      setError('Account ID, Email/Name and PIN are required');
       return;
     }
 
@@ -20,14 +21,15 @@ function BankLogin({ onLoginSuccess, onSignupClick }) {
       setLoading(true);
       setError('');
 
-      // Login with identifier (email or name) and PIN
+      // Login with account ID, identifier (email or name) and PIN
       const res = await API.post('/login', {
+        account_id: accountId,
         identifier: identifier,
         password: pin
       });
       
       if (res.status === 200) {
-        onLoginSuccess(identifier);
+        onLoginSuccess(accountId);
       }
     } catch (err) {
       setError(err.response?.data?.message || 'Invalid Credentials');
@@ -51,6 +53,18 @@ function BankLogin({ onLoginSuccess, onSignupClick }) {
           )}
 
           <form onSubmit={handleLogin}>
+            <div className="mb-3">
+              <label className="form-label">Account ID</label>
+              <input
+                type="text"
+                className="form-control"
+                value={accountId}
+                onChange={(e) => setAccountId(e.target.value)}
+                placeholder="Enter your Account ID"
+                disabled={loading}
+              />
+            </div>
+
             <div className="mb-3">
               <label className="form-label">Email or Name</label>
               <input

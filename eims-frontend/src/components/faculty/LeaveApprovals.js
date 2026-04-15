@@ -7,7 +7,7 @@ const LeaveApprovals = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
-  const [filterStatus, setFilterStatus] = useState('pending'); // 'all', 'pending', 'approved', 'rejected'
+  const [filterStatus, setFilterStatus] = useState('Pending'); // 'all', 'pending', 'approved', 'rejected'
   const facultyId = localStorage.getItem('user_id');
 
   useEffect(() => {
@@ -18,7 +18,15 @@ const LeaveApprovals = () => {
     try {
       setLoading(true);
       const response = await api.get(`/faculty/${facultyId}/leave-requests`);
-      setLeaveRequests(response.data);
+      // Normalize status and dates
+      const normalized = response.data.map(req => ({
+        ...req,
+        status: req.status ? req.status: '',
+        start_date: req.start_date ? new Date(req.start_date) : null,
+        end_date: req.end_date ? new Date(req.end_date) : null,
+        applied_on: req.applied_on ? new Date(req.applied_on) : null,
+      }));
+      setLeaveRequests(normalized);
       setError('');
     } catch (err) {
       setError('Failed to fetch leave requests');
@@ -28,14 +36,14 @@ const LeaveApprovals = () => {
     }
   };
 
-  const handleLeaveAction = async (leaveRequestId, approved) => {
+  const handleLeaveAction = async (requestId, Approved) => {
     try {
       setLoading(true);
       await api.post('/faculty/leave-action', {
-        leave_request_id: leaveRequestId,
-        status: approved ? 'approved' : 'rejected'
+        request_id: requestId,
+        action: Approved ? 'Approved' : 'Rejected'
       });
-      setSuccessMessage(approved ? 'Leave approved!' : 'Leave rejected!');
+      setSuccessMessage(Approved ? 'Leave approved!' : 'Leave rejected!');
       fetchLeaveRequests();
       setTimeout(() => setSuccessMessage(''), 3000);
     } catch (err) {
@@ -48,9 +56,9 @@ const LeaveApprovals = () => {
 
   const getStatusBadge = (status) => {
     switch (status) {
-      case 'approved':
+      case 'Approved':
         return <span className="badge bg-success">Approved</span>;
-      case 'rejected':
+      case 'Rejected':
         return <span className="badge bg-danger">Rejected</span>;
       default:
         return <span className="badge bg-warning">Pending</span>;
@@ -62,9 +70,39 @@ const LeaveApprovals = () => {
       ? leaveRequests
       : leaveRequests.filter((req) => req.status === filterStatus);
 
-  const pendingRequests = leaveRequests.filter((req) => req.status === 'pending');
-  const approvedRequests = leaveRequests.filter((req) => req.status === 'approved');
-  const rejectedRequests = leaveRequests.filter((req) => req.status === 'rejected');
+  const pendingRequests = leaveRequests.filter((req) => req.status === 'Pending');
+  const approvedRequests = leaveRequests.filter((req) => req.status === 'Approved');
+  const rejectedRequests = leaveRequests.filter((req) => req.status === 'Rejected');
+
+  // Helper to calculate days
+  const getDays = (from, to) => {
+    if (!from || !to) return '-';
+    const diff = Math.round((to - from) / (1000 * 60 * 60 * 24)) + 1;
+    return diff > 0 ? diff : '-';
+  };
+
+  // Define a placeholder function for fetchCourseRegistrations
+  const fetchCourseRegistrations = () => {
+    console.warn('fetchCourseRegistrations is not implemented yet.');
+  };
+
+  const handleCourseApproval = async (studentId, courseOfferingId) => {
+    try {
+      setLoading(true);
+      await api.post('/faculty/approve', {
+        student_id: studentId,
+        course_offering_id: courseOfferingId
+      });
+      setSuccessMessage('Course approved successfully!');
+      fetchCourseRegistrations(); // Refresh the course registrations list
+      setTimeout(() => setSuccessMessage(''), 3000);
+    } catch (err) {
+      setError('Failed to approve course');
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="leave-approvals">
@@ -106,28 +144,22 @@ const LeaveApprovals = () => {
 
       <div className="filter-section mb-3">
         <button
-          className={`btn btn-sm ${filterStatus === 'pending' ? 'btn-primary' : 'btn-outline-primary'}`}
-          onClick={() => setFilterStatus('pending')}
+          className={`btn btn-sm ${filterStatus === 'Pending' ? 'btn-primary' : 'btn-outline-primary'}`}
+          onClick={() => setFilterStatus('Pending')}
         >
           Pending
         </button>
         <button
-          className={`btn btn-sm ${filterStatus === 'approved' ? 'btn-success' : 'btn-outline-success'}`}
-          onClick={() => setFilterStatus('approved')}
+          className={`btn btn-sm ${filterStatus === 'Approved' ? 'btn-success' : 'btn-outline-success'}`}
+          onClick={() => setFilterStatus('Approved')}
         >
           Approved
         </button>
         <button
-          className={`btn btn-sm ${filterStatus === 'rejected' ? 'btn-danger' : 'btn-outline-danger'}`}
-          onClick={() => setFilterStatus('rejected')}
+          className={`btn btn-sm ${filterStatus === 'Rejected' ? 'btn-danger' : 'btn-outline-danger'}`}
+          onClick={() => setFilterStatus('Rejected')}
         >
           Rejected
-        </button>
-        <button
-          className={`btn btn-sm ${filterStatus === 'all' ? 'btn-secondary' : 'btn-outline-secondary'}`}
-          onClick={() => setFilterStatus('all')}
-        >
-          All
         </button>
       </div>
 
@@ -144,7 +176,6 @@ const LeaveApprovals = () => {
               <tr>
                 <th>Student ID</th>
                 <th>Student Name</th>
-                <th>Leave Type</th>
                 <th>From Date</th>
                 <th>To Date</th>
                 <th>Reason</th>
@@ -156,11 +187,11 @@ const LeaveApprovals = () => {
             <tbody>
               {filteredRequests.map((request) => (
                 <tr
-                  key={request.leave_request_id}
+                  key={request.request_id}
                   className={
-                    request.status === 'approved'
+                    request.status === 'Approved'
                       ? 'table-success'
-                      : request.status === 'rejected'
+                      : request.status === 'Rejected'
                       ? 'table-danger'
                       : ''
                   }
@@ -170,34 +201,31 @@ const LeaveApprovals = () => {
                   </td>
                   <td>{request.student_name}</td>
                   <td>
-                    <span className="badge bg-light text-dark">{request.leave_type}</span>
+                    <small>{request.start_date ? request.start_date.toLocaleDateString() : '-'}</small>
                   </td>
                   <td>
-                    <small>{new Date(request.from_date).toLocaleDateString()}</small>
-                  </td>
-                  <td>
-                    <small>{new Date(request.to_date).toLocaleDateString()}</small>
+                    <small>{request.end_date ? request.end_date.toLocaleDateString() : '-'}</small>
                   </td>
                   <td>
                     <small className="text-muted">{request.reason || 'N/A'}</small>
                   </td>
                   <td>
-                    <strong>{request.number_of_days}</strong>
+                    <strong>{getDays(request.start_date, request.end_date)}</strong>
                   </td>
                   <td>{getStatusBadge(request.status)}</td>
                   <td>
-                    {request.status === 'pending' ? (
+                    {request.status === 'Pending' ? (
                       <>
                         <button
                           className="btn btn-sm btn-success me-2"
-                          onClick={() => handleLeaveAction(request.leave_request_id, true)}
+                          onClick={() => handleLeaveAction(request.request_id, true)}
                           disabled={loading}
                         >
                           <i className="bi bi-check"></i>
                         </button>
                         <button
                           className="btn btn-sm btn-danger"
-                          onClick={() => handleLeaveAction(request.leave_request_id, false)}
+                          onClick={() => handleLeaveAction(request.request_id, false)}
                           disabled={loading}
                         >
                           <i className="bi bi-x"></i>

@@ -10,6 +10,7 @@ const FacultySchedule = () => {
 
   const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
   
+  // Generate 30-minute time slots with interval display
   const generateTimeSlots = () => {
     const slots = [];
     for (let hour = 9; hour < 17; hour++) {
@@ -28,6 +29,7 @@ const FacultySchedule = () => {
   
   const timeSlots = generateTimeSlots();
   
+  // Calculate how many slots a class spans
   const getRowSpan = (startTime, endTime) => {
     const [startHour, startMin] = startTime.split(':').map(Number);
     const [endHour, endMin] = endTime.split(':').map(Number);
@@ -46,14 +48,18 @@ const FacultySchedule = () => {
   const fetchSchedule = async () => {
     try {
       setLoading(true);
+      console.log('Fetching schedule for faculty:', facultyId);
       const response = await api.get(`/faculty/${facultyId}/schedule`);
+      console.log('Schedule response:', response.data);
       
+      // Normalize times to HH:MM format
       const normalizedSchedule = response.data.map(item => ({
         ...item,
         start_time: item.start_time ? item.start_time.substring(0, 5) : item.start_time,
         end_time: item.end_time ? item.end_time.substring(0, 5) : item.end_time
       }));
       
+      console.log('Normalized schedule:', normalizedSchedule);
       setSchedule(normalizedSchedule);
       setError('');
     } catch (err) {
@@ -94,16 +100,26 @@ const FacultySchedule = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {timeSlots.map((slot) => (
-                      <tr key={slot.start}>
-                        <td className="time-slot">
-                          <strong>{slot.display}</strong>
+                    {timeSlots.map((slot) => {
+                      // Check if a class starts at this time slot
+                      const classAtThisTime = schedule.find(
+                        (c) => c.scheduled_day && timeSlots.some(
+                          s => s.start === slot.start && c.scheduled_day === 
+                            Object.keys(daysOfWeek).length > 0 ? true : false
+                        )
+                      );
+                      
+                      return (
+                        <tr key={slot.start}>
+                          <td className="time-slot">
+                            <strong>{slot.display}</strong>
                         </td>
                         {daysOfWeek.map((day) => {
                           const classInfo = schedule.find(
                             (c) => c.scheduled_day === day && c.start_time === slot.start
                           );
                           
+                          // Check if this slot is within a class duration
                           const isWithinClass = schedule.some(c => {
                             if (c.scheduled_day !== day) return false;
                             const [startHour, startMin] = c.start_time.split(':').map(Number);
@@ -114,7 +130,7 @@ const FacultySchedule = () => {
                             const classEnd = endHour * 60 + endMin;
                             const slotTime = slotHour * 60 + slotMin;
                             
-                            return slotTime > classStart && slotTime < classEnd;
+                            return slotTime >= classStart && slotTime < classEnd;
                           });
                           
                           if (classInfo) {
@@ -151,15 +167,17 @@ const FacultySchedule = () => {
                               </td>
                             );
                           } else {
-                            return null;
+                            return null; // This cell is within a class that already spans here
                           }
                         })}
                       </tr>
-                    ))}
+                    );
+                    })}
                   </tbody>
                 </table>
               </div>
 
+              {/* Summary Card */}
               <div className="schedule-summary mt-4">
                 <div className="row">
                   <div className="col-md-6">

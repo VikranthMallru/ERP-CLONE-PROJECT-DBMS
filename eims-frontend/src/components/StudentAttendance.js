@@ -57,6 +57,20 @@ function StudentAttendance({ userId }) {
     ? ((overallPresent / overallClasses) * 100).toFixed(2)
     : "0.00";
 
+  const getAttendanceBadge = (percentage) => {
+    const numericPercentage = Number(percentage);
+
+    if (numericPercentage >= 75) {
+      return <span className="badge bg-success">Good Standing</span>;
+    }
+
+    if (numericPercentage >= 60) {
+      return <span className="badge bg-warning text-dark">Needs Attention</span>;
+    }
+
+    return <span className="badge bg-danger">Low Attendance</span>;
+  };
+
   if (loading) {
     return <div className="text-center"><div className="spinner-border text-primary"></div></div>;
   }

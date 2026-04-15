@@ -138,28 +138,27 @@ function CourseRegistrations({ userId }) {
               </small>
             </div>
             <div className="table-responsive">
-              <table className="table table-hover">
-                <thead className="table-light">
+              <table className="table table-hover mb-0" style={{ fontSize: "14px" }}>
+                <thead className="table-light sticky-top">
                   <tr>
-                    <th width="5%" className="text-center">#</th>
-                    <th>Course Name</th>
-                    <th>Faculty</th>
-                    <th>Semester</th>
-                    <th width="10%" className="text-center">
+                    <th style={{ width: "4%", textAlign: "center" }}>#</th>
+                    <th style={{ width: "35%" }}>Course Name</th>
+                    <th style={{ width: "25%" }}>Faculty</th>
+                    <th style={{ width: "12%" }}>Semester</th>
+                    <th style={{ width: "12%", textAlign: "center" }}>
                       <i className="fas fa-info-circle"></i>
                     </th>
-                    <th width="10%" className="text-center">
-                      <i className="fas fa-check-square"></i> Select
-                    </th>
+                    <th style={{ width: "12%", textAlign: "center" }}>Select</th>
                   </tr>
                 </thead>
                 <tbody>
                   {registrations.map((course, index) => (
-                    <div key={course.course_offering_id}>
+                    <>
                       <tr style={{
-                        borderLeft: course.is_backlog ? "4px solid #ff6b6b" : "4px solid transparent"
+                        borderLeft: course.is_backlog ? "4px solid #ff6b6b" : "4px solid transparent",
+                        verticalAlign: "middle"
                       }}>
-                        <td className="text-center text-muted">{index + 1}</td>
+                        <td style={{ textAlign: "center", color: "#999" }}>{index + 1}</td>
                         <td>
                           <strong>{course.course_name}</strong>
                           {course.is_backlog && (
@@ -168,59 +167,59 @@ function CourseRegistrations({ userId }) {
                         </td>
                         <td>{course.faculty_name || "TBD"}</td>
                         <td>{course.semester || "N/A"}</td>
-                        <td className="text-center">
+                        <td style={{ textAlign: "center" }}>
                           <button
                             className="btn btn-sm btn-outline-info"
                             onClick={() => toggleExpandCourse(course.course_offering_id)}
                             title="View prerequisites"
+                            style={{ padding: "4px 8px" }}
                           >
                             <i className="fas fa-chevron-down"></i>
                           </button>
                         </td>
-                        <td className="text-center">
+                        <td style={{ textAlign: "center", verticalAlign: "middle" }}>
                           <input
                             type="checkbox"
                             className="form-check-input"
                             checked={selectedCourses[course.course_offering_id] || false}
                             onChange={() => handleCheckboxChange(course.course_offering_id)}
                             disabled={submitting}
+                            style={{ cursor: "pointer", width: "18px", height: "18px" }}
                           />
                         </td>
                       </tr>
                       {expandedCourse === course.course_offering_id && (
                         <tr className="bg-light">
-                          <td colSpan="6">
-                            <div className="p-3">
-                              <h6 className="mb-2">Prerequisites:</h6>
-                              {loadingPrereqs[course.course_offering_id] ? (
-                                <small className="text-muted">Loading prerequisites...</small>
-                              ) : prerequisites[course.course_offering_id]?.prerequisites?.length === 0 ? (
-                                <small className="text-muted">No prerequisites required</small>
-                              ) : (
-                                <div className="table-responsive">
-                                  <table className="table table-sm table-bordered">
-                                    <thead>
-                                      <tr className="table-light">
-                                        <th>Prerequisite Course</th>
-                                        <th>Credits</th>
+                          <td colSpan="6" style={{ padding: "20px" }}>
+                            <h6 className="mb-3" style={{ fontWeight: "600" }}>Prerequisites:</h6>
+                            {loadingPrereqs[course.course_offering_id] ? (
+                              <small className="text-muted">Loading prerequisites...</small>
+                            ) : prerequisites[course.course_offering_id]?.prerequisites?.length === 0 ? (
+                              <small className="text-muted">No prerequisites required</small>
+                            ) : (
+                              <div style={{ marginLeft: "20px" }}>
+                                <table className="table table-sm table-bordered" style={{ marginBottom: "0" }}>
+                                  <thead>
+                                    <tr className="table-light">
+                                      <th style={{ width: "70%" }}>Prerequisite Course</th>
+                                      <th style={{ width: "30%", textAlign: "center" }}>Credits</th>
+                                    </tr>
+                                  </thead>
+                                  <tbody>
+                                    {prerequisites[course.course_offering_id]?.prerequisites?.map((prereq, idx) => (
+                                      <tr key={idx}>
+                                        <td>{prereq.course_name}</td>
+                                        <td style={{ textAlign: "center" }}>{prereq.credits}</td>
                                       </tr>
-                                    </thead>
-                                    <tbody>
-                                      {prerequisites[course.course_offering_id]?.prerequisites?.map((prereq, idx) => (
-                                        <tr key={idx}>
-                                          <td>{prereq.course_name}</td>
-                                          <td>{prereq.credits}</td>
-                                        </tr>
-                                      ))}
-                                    </tbody>
-                                  </table>
-                                </div>
-                              )}
-                            </div>
+                                    ))}
+                                  </tbody>
+                                </table>
+                              </div>
+                            )}
                           </td>
                         </tr>
                       )}
-                    </div>
+                    </>
                   ))}
                 </tbody>
               </table>

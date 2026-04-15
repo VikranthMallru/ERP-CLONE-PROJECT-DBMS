@@ -38,6 +38,7 @@
   margin-bottom: 30px;
 }
 
+/* Query Section */
 .query-section {
   background: white;
   border-radius: 10px;
@@ -162,6 +163,7 @@
   word-break: break-all;
 }
 
+/* Results Section */
 .results-section {
   background: white;
   border-radius: 10px;
@@ -172,7 +174,7 @@
   flex-direction: column;
 }
 
-.admin-console-container .results-container {
+.results-container {
   display: flex;
   flex-direction: column;
   height: 100%;
@@ -279,40 +281,42 @@
   font-size: 1.1rem;
 }
 
-.admin-console-container .alert {
+/* Alerts */
+.alert {
   border-radius: 6px;
   border-left: 4px solid;
   margin-bottom: 15px;
 }
 
-.admin-console-container .alert-danger {
+.alert-danger {
   border-left-color: #dc3545;
 }
 
-.admin-console-container .alert-success {
+.alert-success {
   border-left-color: #28a745;
 }
 
-.admin-console-container .alert-warning {
+.alert-warning {
   border-left-color: #ffc107;
 }
 
-.admin-console-container .alert-info {
+.alert-info {
   border-left-color: #17a2b8;
 }
 
-.admin-console-container .alert h5 {
+.alert h5 {
   margin: 0 0 8px 0;
   color: #333;
   font-weight: 600;
 }
 
-.admin-console-container .alert p {
+.alert p {
   margin: 0;
   color: #555;
   font-size: 0.95rem;
 }
 
+/* Security Notice */
 .security-notice {
   background: white;
   border-radius: 10px;
@@ -350,13 +354,14 @@
 }
 
 .security-notice li:before {
-  content: '\2713';
+  content: '✓';
   position: absolute;
   left: 0;
   color: #28a745;
   font-weight: bold;
 }
 
+/* Responsive Design */
 @media (max-width: 1200px) {
   .console-layout {
     grid-template-columns: 1fr;

@@ -7,7 +7,6 @@ function SupplementaryExams({ userId }) {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [appliedExams, setAppliedExams] = useState({});
-  const [processingPayment, setProcessingPayment] = useState({});
 
   useEffect(() => {
     fetchSupplementaryExams();
@@ -30,30 +29,10 @@ function SupplementaryExams({ userId }) {
   const handleApplyExam = async (courseOfferingId) => {
     try {
       setAppliedExams(prev => ({ ...prev, [courseOfferingId]: true }));
-      setSuccess("Applied successfully! Proceed to payment.");
-      setTimeout(() => setSuccess(""), 3000);
+      setSuccess("Applied successfully! Please pay the exam fee at the Main Building counter.");
+      setTimeout(() => setSuccess(""), 5000);
     } catch (err) {
       setError("Failed to apply for exam");
-    }
-  };
-
-  const handlePayment = async (courseOfferingId, price) => {
-    try {
-      setProcessingPayment(prev => ({ ...prev, [courseOfferingId]: true }));
-      
-      // Redirect to bank portal with supplementary exam payment details
-      const bankPortalUrl = `${process.env.REACT_APP_BANK_URL || 'http://localhost:3001'}?student_id=${userId}&exam_type=supplementary&course_offering_id=${courseOfferingId}&amount=${price}`;
-      
-      // Give brief feedback before redirect
-      setSuccess("Redirecting to payment portal...");
-      
-      setTimeout(() => {
-        window.location.href = bankPortalUrl;
-      }, 1000);
-      
-    } catch (err) {
-      setError("Failed to initiate payment");
-      setProcessingPayment(prev => ({ ...prev, [courseOfferingId]: false }));
     }
   };
 
@@ -130,19 +109,9 @@ function SupplementaryExams({ userId }) {
                         ) : (
                           <button 
                             className="btn btn-sm btn-success"
-                            onClick={() => handlePayment(exam.course_offering_id, exam.price)}
-                            disabled={processingPayment[exam.course_offering_id]}
+                            disabled
                           >
-                            {processingPayment[exam.course_offering_id] ? (
-                              <>
-                                <span className="spinner-border spinner-border-sm me-1"></span>
-                                Processing...
-                              </>
-                            ) : (
-                              <>
-                                <i className="fas fa-credit-card me-1"></i> Pay Now
-                              </>
-                            )}
+                            <i className="fas fa-check-circle me-1"></i> Applied
                           </button>
                         )}
                       </td>

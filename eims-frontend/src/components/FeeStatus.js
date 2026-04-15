@@ -59,7 +59,8 @@ function FeeStatus({ userId: propUserId }) {
       case "overdue":
         return <span className="badge bg-danger">⚠ Overdue</span>;
       default:
-        return <span className="badge bg-secondary">Unknown</span>;
+        // Default to paid for completed payment history entries
+        return <span className="badge bg-success">✓ Paid</span>;
     }
   };
 

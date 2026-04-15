@@ -18,8 +18,11 @@ const CourseApprovals = () => {
       setLoading(true);
       setError('');
       
+      // Fetch pending courses for all students under this faculty
       const pendingStudents = await api.get(`/faculty/pending/${facultyId}`);
+      console.log('Pending students:', pendingStudents.data);
       
+      // For each student, fetch their pending courses
       const allCourses = [];
       for (const student of pendingStudents.data) {
         try {
@@ -34,6 +37,7 @@ const CourseApprovals = () => {
         }
       }
       
+      console.log('All course registrations:', allCourses);
       setCourseRegistrations(allCourses);
     } catch (err) {
       setError('Failed to fetch course registrations');
@@ -46,14 +50,17 @@ const CourseApprovals = () => {
   const handleCourseApproval = async (studentId, courseOfferingId) => {
     try {
       setLoading(true);
+      console.log('Approving course:', { studentId, courseOfferingId });
       
-      await api.post('/faculty/approve', {
+      const response = await api.post('/faculty/approve', {
         student_id: studentId,
         course_offering_id: courseOfferingId
       });
       
+      console.log('Approval response:', response.data);
       setSuccessMessage('Course approved successfully!');
       
+      // Refresh the course registrations list
       await fetchCourseRegistrations();
       setTimeout(() => setSuccessMessage(''), 3000);
     } catch (err) {

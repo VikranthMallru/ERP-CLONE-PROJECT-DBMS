@@ -19,6 +19,7 @@ function FacultyProfile({ userId }) {
     fetchProfile();
   }, [userId]);
 
+  // Auto-clear error message after 5 seconds
   useEffect(() => {
     if (error) {
       const timer = setTimeout(() => setError(""), 5000);
@@ -26,6 +27,7 @@ function FacultyProfile({ userId }) {
     }
   }, [error]);
 
+  // Auto-clear success message after 3 seconds
   useEffect(() => {
     if (success) {
       const timer = setTimeout(() => setSuccess(""), 3000);
@@ -69,9 +71,11 @@ function FacultyProfile({ userId }) {
         faculty_id: userId,
         ...formData
       };
+      console.log("Sending faculty profile update:", payload);
       
       const res = await API.post("/faculty/profile", payload);
       
+      console.log("Faculty profile update response:", res.data);
       setSuccess("Profile updated successfully!");
       setProfile({ 
         ...profile, 
@@ -91,7 +95,7 @@ function FacultyProfile({ userId }) {
   return (
     <div className="card shadow">
       <div className="card-header bg-primary text-white">
-        <h5 className="mb-0">Faculty Profile</h5>
+        <h5 className="mb-0">👨‍🏫 Faculty Profile</h5>
       </div>
       <div className="card-body">
         {error && (
@@ -135,7 +139,7 @@ function FacultyProfile({ userId }) {
               className="btn btn-warning mt-3"
               onClick={() => setIsEditing(true)}
             >
-              Edit Profile
+              ✏️ Edit Profile
             </button>
           </div>
         ) : (
@@ -195,7 +199,7 @@ function FacultyProfile({ userId }) {
                 type="submit" 
                 className="btn btn-primary"
               >
-                Save Changes
+                💾 Save Changes
               </button>
               <button 
                 type="button"

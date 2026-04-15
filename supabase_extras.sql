@@ -813,7 +813,7 @@ JOIN Courses c ON co.course_id = c.course_id
 JOIN Faculty f ON co.faculty_id = f.faculty_id;
 
 CREATE OR REPLACE VIEW Student_Course_View AS
-SELECT ca.student_id, co.course_offering_id, c.course_id, c.course_name, co.semester, f.faculty_id, f.faculty_name
+SELECT ca.student_id, co.course_offering_id, c.course_id, c.course_name, c.credits, co.semester, f.faculty_id, f.faculty_name
 FROM Course_Allotted ca
 JOIN Course_Offerings co ON ca.course_offering_id = co.course_offering_id
 JOIN Courses c ON co.course_id = c.course_id
@@ -871,7 +871,7 @@ JOIN Course_Offerings co ON f.course_offering_id = co.course_offering_id
 JOIN Courses c ON co.course_id = c.course_id;
 
 CREATE OR REPLACE VIEW Student_Leave_Requests AS
-SELECT student_id, start_date, end_date, reason, status FROM Leave_Requests;
+SELECT request_id, student_id, start_date, end_date, reason, status, applied_on FROM Leave_Requests;
 
 CREATE OR REPLACE VIEW Student_Faculty_Advisor AS
 SELECT fa.student_id, f.faculty_id, f.faculty_name, f.email, f.contact_no, d.dept_name

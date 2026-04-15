@@ -66,13 +66,15 @@ const AttendanceManagement = () => {
     try {
       setLoading(true);
       const attendanceData = Object.keys(attendance).map((studentId) => ({
-        student_id: parseInt(studentId),
+        student_id: studentId,
         course_offering_id: selectedCourse,
         date: selectedDate,
         is_present: attendance[studentId]
       }));
 
       await api.post('/faculty/mark-attendance', {
+        course_offering_id: selectedCourse,
+        date: selectedDate,
         attendance: attendanceData
       });
 

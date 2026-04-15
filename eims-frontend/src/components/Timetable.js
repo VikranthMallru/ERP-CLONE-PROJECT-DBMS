@@ -15,7 +15,26 @@ function Timetable({ userId }) {
     try {
       setLoading(true);
       const res = await API.get(`/student/${userId}/timetable`);
-      setTimetable(res.data);
+      console.log("Raw API data:", res.data);
+      
+      // Normalize times to HH:MM format (first 5 chars)
+      const normalizedSchedule = res.data.map(item => {
+        const start = item.start_time ? item.start_time.substring(0, 5) : "";
+        const end = item.end_time ? item.end_time.substring(0, 5) : "";
+        console.log(`Normalizing: ${item.course_name} - "${item.start_time}" -> "${start}"`);
+        return {
+          ...item,
+          start_time: start,
+          end_time: end
+        };
+      });
+      
+      console.log("=== NORMALIZED SCHEDULE ===");
+      normalizedSchedule.forEach(c => {
+        console.log(`${c.course_name}: ${c.start_time} - ${c.end_time} on ${c.scheduled_day}`);
+      });
+      
+      setTimetable(normalizedSchedule);
       setError("");
     } catch (err) {
       console.error(err);
@@ -27,215 +46,249 @@ function Timetable({ userId }) {
 
   const days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
   
-  const getTimetableByDay = (day) => {
-    return timetable.filter(slot => slot.scheduled_day === day);
-  };
-
   const formatTime = (time) => {
-    try {
-      const parts = time.toString().split(':');
-      return `${parts[0]}:${parts[1]}`;
-    } catch (e) {
-      return time;
+    if (!time) return "";
+    const parts = time.toString().split(':');
+    return `${String(parts[0]).padStart(2, '0')}:${String(parts[1]).padStart(2, '0')}`;
+  };
+
+  // Generate 30-minute time slots from 8:00 AM to 6:00 PM
+  const generateTimeSlots = () => {
+    const slots = [];
+    for (let hour = 8; hour < 18; hour++) {
+      for (let minute = 0; minute < 60; minute += 30) {
+        const start = `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
+        const nextMinute = minute === 0 ? 30 : 0;
+        const nextHour = minute === 0 ? hour : hour + 1;
+        const end = `${String(nextHour).padStart(2, '0')}:${String(nextMinute).padStart(2, '0')}`;
+        slots.push({ start, end, display: `${start} - ${end}` });
+      }
     }
+    return slots;
   };
 
-  // Check if a class is active at a specific time slot
-  const getClassAtSlot = (day, slotTime) => {
-    const dayClasses = getTimetableByDay(day);
-    return dayClasses.find(cls => {
-      const startTime = formatTime(cls.start_time);
-      const endTime = formatTime(cls.end_time);
-      return startTime <= slotTime && endTime > slotTime;
-    });
-  };
+  const timeSlots = generateTimeSlots();
 
-  // Calculate row span for a class (how many 30-min slots it occupies)
   const getRowSpan = (startTime, endTime) => {
-    const timeToMinutes = (timeStr) => {
-      const [hours, minutes] = timeStr.split(':').map(Number);
-      return hours * 60 + minutes;
-    };
+    const [startHour, startMin] = startTime.split(':').map(Number);
+    const [endHour, endMin] = endTime.split(':').map(Number);
     
-    const startMinutes = timeToMinutes(formatTime(startTime));
-    const endMinutes = timeToMinutes(formatTime(endTime));
+    const startMinutes = startHour * 60 + startMin;
+    const endMinutes = endHour * 60 + endMin;
     const durationMinutes = endMinutes - startMinutes;
-    return Math.ceil(durationMinutes / 30); // Each slot is 30 minutes
+    
+    return Math.max(1, Math.ceil(durationMinutes / 30));
   };
 
   if (loading) {
     return <div className="text-center"><div className="spinner-border text-primary"></div></div>;
   }
 
-  // Generate time slots from 8:00 AM to 12:00 AM (midnight)
-  const timeSlots = [];
-  for (let hour = 8; hour <= 24; hour++) {
-    for (let minute = 0; minute < 60; minute += 30) {
-      const displayHour = hour === 24 ? 0 : hour;
-      const nextHour = hour === 24 ? 1 : (minute === 30 ? hour + 1 : hour);
-      const nextMinute = minute === 30 ? 0 : 30;
-      const nextDisplayHour = nextHour === 24 ? 0 : nextHour;
-      
-      const timeStr = `${String(displayHour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
-      const nextTimeStr = `${String(nextDisplayHour).padStart(2, '0')}:${String(nextMinute).padStart(2, '0')}`;
-      timeSlots.push({ time: timeStr, nextTime: nextTimeStr });
-      
-      if (hour === 24) break; // Stop after midnight
+  const normalizeDay = (day) => {
+    if (day === null || day === undefined) return "";
+    const dayStr = day.toString().toLowerCase().trim();
+    
+    console.log("Raw day value:", day, "Type:", typeof day, "String:", dayStr);
+    
+    // Handle number format (0-4)
+    if (!isNaN(dayStr) && dayStr !== "") {
+      const dayNum = parseInt(dayStr);
+      if (dayNum >= 0 && dayNum < days.length) {
+        console.log("Matched as index:", dayNum, "->", days[dayNum]);
+        return days[dayNum];
+      }
     }
-  }
+    
+    // Handle exact day name matches
+    const dayNames = {
+      "monday": "Monday",
+      "tuesday": "Tuesday",
+      "wednesday": "Wednesday",
+      "thursday": "Thursday",
+      "friday": "Friday"
+    };
+    
+    if (dayNames[dayStr]) {
+      console.log("Matched exact name:", dayNames[dayStr]);
+      return dayNames[dayStr];
+    }
+    
+    // Check if day name appears in string
+    for (let d of days) {
+      if (dayStr.includes(d.toLowerCase())) {
+        console.log("Matched substring:", d);
+        return d;
+      }
+    }
+    
+    console.log("NO MATCH for day:", day);
+    return "";
+  };
+
+  // Normalize and group classes by day
+  const classesByDay = {};
+  days.forEach(day => {
+    classesByDay[day] = [];
+  });
+
+  console.log("Total timetable entries:", timetable.length);
+  
+  timetable.forEach((cls, idx) => {
+    console.log(`Entry ${idx}:`, {
+      course_name: cls.course_name,
+      scheduled_day: cls.scheduled_day,
+      start_time: cls.start_time,
+      end_time: cls.end_time
+    });
+    
+    const normalizedDay = normalizeDay(cls.scheduled_day);
+    if (normalizedDay && classesByDay[normalizedDay]) {
+      classesByDay[normalizedDay].push(cls);
+      console.log(`✓ Added "${cls.course_name}" to ${normalizedDay} at ${cls.start_time}-${cls.end_time}`);
+    } else {
+      console.log(`✗ Not added - normalized day: "${normalizedDay}"`);
+    }
+  });
+
+  console.log("=== FINAL Classes by Day ===");
+  days.forEach(day => {
+    console.log(`${day}: ${classesByDay[day].length} classes -`, classesByDay[day].map(c => `${c.course_name} (${c.start_time})`));
+  });
 
   return (
     <div className="card shadow">
-      <div className="card-header bg-info text-white">
+      <div className="card-header bg-primary text-white">
         <h5 className="mb-0">
           <i className="fas fa-calendar-week me-2"></i> My Timetable
         </h5>
       </div>
       <div className="card-body">
         {error && (
-          <div className="alert alert-warning" role="alert">
+          <div className="alert alert-danger alert-dismissible fade show" role="alert">
             {error}
+            <button type="button" className="btn-close" onClick={() => setError("")}></button>
           </div>
         )}
 
         {timetable.length === 0 ? (
-          <div className="alert alert-info" role="alert">
-            <i className="fas fa-info-circle me-2"></i> No classes scheduled
+          <div className="alert alert-info mb-0" role="alert">
+            <i className="fas fa-calendar-check me-2"></i> No classes scheduled for this week
           </div>
         ) : (
-          <>
-            {/* Grid View */}
-            <div className="timetable-grid mb-4">
-              <div className="timetable-wrapper">
-                <table className="table table-bordered timetable-table">
-                  <thead className="table-light sticky-top">
-                    <tr>
-                      <th className="time-col">Time Slot</th>
-                      {days.map(day => (
-                        <th key={day} className="day-col text-center">
-                          <div className="day-full">{day}</div>
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {timeSlots.map((slot, idx) => {
-                      // Track which cells are already occupied (due to rowspan)
-                      const rowKey = `${slot.time}`;
-                      
-                      return (
-                        <tr key={idx}>
-                          <td className="time-col text-center text-muted small">
-                            <strong>{slot.time} - {slot.nextTime}</strong>
-                          </td>
-                          {days.map(day => {
-                            const classAtSlot = getClassAtSlot(day, slot.time);
-                            
-                            // Only render if this is the start time of the class
-                            if (classAtSlot) {
-                              const rowspan = getRowSpan(classAtSlot.start_time, classAtSlot.end_time);
-                              const startTimeStr = formatTime(classAtSlot.start_time);
-                              
-                              // Only render the cell at its start time
-                              if (startTimeStr === slot.time) {
-                                return (
-                                  <td 
-                                    key={day} 
-                                    className="class-cell"
-                                    rowSpan={rowspan}
-                                    style={{
-                                      backgroundColor: '#e3f2fd',
-                                      borderLeft: '4px solid #2196f3',
-                                      padding: '8px',
-                                      verticalAlign: 'top'
-                                    }}
-                                  >
-                                    <div className="class-slot">
-                                      <div className="course-name">
-                                        <strong>{classAtSlot.course_name}</strong>
-                                      </div>
-                                      <div className="class-time small text-muted">
-                                        {formatTime(classAtSlot.start_time)} - {formatTime(classAtSlot.end_time)}
-                                      </div>
-                                      <div className="class-location small text-muted">
-                                        <i className="fas fa-map-marker me-1"></i>
-                                        {classAtSlot.building_name} - {classAtSlot.room_number}
-                                      </div>
-                                    </div>
-                                  </td>
-                                );
-                              } else {
-                                // Don't render, it's covered by rowspan
-                                return null;
-                              }
-                            } else {
-                              // Empty slot
-                              return (
-                                <td 
-                                  key={day} 
-                                  className="class-cell"
-                                  style={{
-                                    backgroundColor: '#f8f9fa',
-                                    minHeight: '60px'
-                                  }}
-                                >
-                                </td>
-                              );
-                            }
-                          })}
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
+          <div className="timetable-container">
+            {/* Summary Cards */}
+            <div className="schedule-summary mb-4">
+              <div className="row">
+                <div className="col-md-6">
+                  <div className="summary-card">
+                    <h6>Total Classes</h6>
+                    <h4>{timetable.length}</h4>
+                  </div>
+                </div>
+                <div className="col-md-6">
+                  <div className="summary-card">
+                    <h6>Days with Classes</h6>
+                    <h4>
+                      {new Set(timetable.map((c) => normalizeDay(c.scheduled_day))).size}
+                    </h4>
+                  </div>
+                </div>
               </div>
             </div>
 
-            {/* Daily Summary */}
-            <div className="row mt-4">
-              {days.map(day => {
-                const dayClasses = getTimetableByDay(day);
-                return (
-                  <div key={day} className="col-md-4 mb-3">
-                    <div className="card bg-light">
-                      <div className="card-body">
-                        <h6 className="card-title">
-                          <i className="fas fa-circle" style={{ color: '#2196f3', fontSize: '8px' }}></i> {day}
-                        </h6>
-                        {dayClasses.length === 0 ? (
-                          <small className="text-muted">No classes</small>
-                        ) : (
-                          <ul className="list-unstyled">
-                            {dayClasses.map((slot, index) => (
-                              <li key={index} className="mb-2">
-                                <small>
-                                  <strong>{slot.course_name}</strong>
-                                  <br />
-                                  <i className="fas fa-clock me-1"></i>
-                                  {formatTime(slot.start_time)} - {formatTime(slot.end_time)}
-                                  <br />
-                                  <i className="fas fa-map-marker me-1"></i>
-                                  {slot.building_name} (Room {slot.room_number})
-                                </small>
-                              </li>
-                            ))}
-                          </ul>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+            {/* Timetable */}
+            <div className="table-responsive">
+              <table className="timetable">
+                <thead>
+                  <tr>
+                    <th className="time-header">Time</th>
+                    {days.map((day) => (
+                      <th key={day} className="day-header">{day}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {timeSlots.map((slot, slotIdx) => {
+                    const renderedCells = new Set();
+                    
+                    // Log for debugging - first few slots
+                    if (slotIdx < 3) {
+                      console.log(`\n=== Checking Slot ${slotIdx}: "${slot.start}" ===`);
+                      days.forEach(day => {
+                        const classesForDay = classesByDay[day];
+                        const startingClass = classesForDay.find(c => c.start_time === slot.start);
+                        console.log(`  ${day}: ${classesForDay.length} classes, starting at ${slot.start}? ${startingClass ? startingClass.course_name : 'NO'}`);
+                      });
+                    }
 
-            {/* Legend */}
-            <div className="alert alert-info mt-4">
-              <small>
-                <i className="fas fa-info-circle me-2"></i>
-                <strong>Legend:</strong> Each class spans across all time slots it occupies. Classes are color-coded with blue background and show course name, time, and location.
-              </small>
+                    return (
+                      <tr key={slotIdx}>
+                        <td className="time-cell">{slot.display}</td>
+                        {days.map((day) => {
+                          const cellKey = `${day}-${slotIdx}`;
+                          
+                          // Skip if already covered by rowspan
+                          if (renderedCells.has(cellKey)) {
+                            return null;
+                          }
+
+                          // Find class starting at this time for this day
+                          const classAtThisTime = classesByDay[day].find(
+                            (cls) => cls.start_time === slot.start
+                          );
+
+                          if (classAtThisTime) {
+                            const rowSpan = getRowSpan(classAtThisTime.start_time, classAtThisTime.end_time);
+                            
+                            // Mark future slots as rendered for this class
+                            for (let i = 0; i < rowSpan; i++) {
+                              renderedCells.add(`${day}-${slotIdx + i}`);
+                            }
+
+                            return (
+                              <td
+                                key={cellKey}
+                                className="schedule-cell"
+                                rowSpan={rowSpan}
+                              >
+                                <div className="class-content">
+                                  <div className="course-name">{classAtThisTime.course_name}</div>
+                                  <div className="location-info">
+                                    {classAtThisTime.building_name} -  {classAtThisTime.room_number}
+                                  </div>
+                                  <div className="time-info">
+                                    {classAtThisTime.start_time} - {classAtThisTime.end_time}
+                                  </div>
+                                </div>
+                              </td>
+                            );
+                          } else {
+                            // Check if covered by previous class
+                            const isCovered = classesByDay[day].some((cls) => {
+                              const [startHour, startMin] = cls.start_time.split(':').map(Number);
+                              const [endHour, endMin] = cls.end_time.split(':').map(Number);
+                              const [slotHour, slotMin] = slot.start.split(':').map(Number);
+                              
+                              const classStart = startHour * 60 + startMin;
+                              const classEnd = endHour * 60 + endMin;
+                              const slotTime = slotHour * 60 + slotMin;
+                              
+                              return slotTime > classStart && slotTime < classEnd;
+                            });
+
+                            if (!isCovered) {
+                              return <td key={cellKey} className="empty-cell"></td>;
+                            }
+                            return null;
+                          }
+                        })}
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
             </div>
-          </>
+          </div>
         )}
       </div>
     </div>
