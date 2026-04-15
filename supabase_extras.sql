@@ -888,8 +888,9 @@ SELECT
     a.student_id,
     c.course_name,
     a.course_offering_id,
+    COUNT(*) FILTER (WHERE a.status = 'Present') AS total_present,
+    COUNT(*) FILTER (WHERE a.status = 'Absent') AS total_absent,
     COUNT(*) AS total_classes,
-    COUNT(*) FILTER (WHERE a.status = 'Present') AS present_count,
     ROUND(COUNT(*) FILTER (WHERE a.status = 'Present')::NUMERIC / NULLIF(COUNT(*), 0) * 100, 2) AS attendance_percentage
 FROM Attendance a
 JOIN Course_Offerings co ON a.course_offering_id = co.course_offering_id
