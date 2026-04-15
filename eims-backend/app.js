@@ -1351,29 +1351,43 @@ app.get('/faculty/course/:course_offering_id/feedbacks', async (req, res) => {
 
 
 app.get('/faculty/available-slots', async (req, res) => {
-  const { building } = req.query;
+  const { building, day, start_time, end_time } = req.query;
 
   try {
-    console.log('Fetching available rooms for building:', building);
-    
-    const query = building
-      ? `SELECT DISTINCT
-          r.room_number,
-          r.building_name,
-          r.capacity
-         FROM Rooms r
-         WHERE r.building_name = $1
-         ORDER BY r.building_name, r.room_number`
-      : `SELECT DISTINCT
-          r.room_number,
-          r.building_name,
-          r.capacity
-         FROM Rooms r
-         ORDER BY r.building_name, r.room_number`;
+    console.log('Fetching available rooms:', { building, day, start_time, end_time });
 
-    const result = building
-      ? await pool.query(query, [building])
-      : await pool.query(query);
+    // Always use get_room_availability; pass day or NULL (NULL = Mon-Fri)
+    const params = [day || null];
+    const conditions = [];
+    let paramIndex = 2;
+
+    if (start_time) {
+      conditions.push(`ra.end_time > $${paramIndex}::TIME`);
+      params.push(start_time);
+      paramIndex++;
+    }
+    if (end_time) {
+      conditions.push(`ra.start_time < $${paramIndex}::TIME`);
+      params.push(end_time);
+      paramIndex++;
+    }
+    if (building) {
+      conditions.push(`ra.building_name = $${paramIndex}`);
+      params.push(building);
+      paramIndex++;
+    }
+
+    const whereClause = conditions.length > 0 ? 'WHERE ' + conditions.join(' AND ') : '';
+
+    const result = await pool.query(
+      `SELECT DISTINCT ra.building_name, ra.room_number, r.capacity,
+              ra.scheduled_day, ra.start_time, ra.end_time
+       FROM get_room_availability($1) ra
+       JOIN Rooms r ON r.building_name = ra.building_name AND r.room_number = ra.room_number
+       ${whereClause}
+       ORDER BY ra.building_name, ra.room_number, ra.start_time`,
+      params
+    );
 
     const slots = result.rows.map(room => ({
       room_id: room.room_number,
@@ -1381,10 +1395,13 @@ app.get('/faculty/available-slots', async (req, res) => {
       building_name: room.building_name,
       building_number: room.building_name,
       capacity: room.capacity,
-      room_capacity: room.capacity
+      room_capacity: room.capacity,
+      available_day: room.scheduled_day,
+      available_from: room.start_time,
+      available_to: room.end_time
     }));
 
-    console.log('Available slots:', slots);
+    console.log('Available slots:', slots.length, 'rooms found');
     res.json(slots);
 
   } catch (err) {
@@ -1423,6 +1440,26 @@ app.post('/faculty/book-class', async (req, res) => {
     if (!course_offering_id || !room_id || !building_name || !scheduled_day || !start_time || !end_time || !booked_by_faculty_id) {
       return res.status(400).json({
         error: "All fields are required: course_offering_id, room_id, building_name, scheduled_day, start_time, end_time, booked_by_faculty_id"
+      });
+    }
+
+    // Check if the professor already has a class at the same day and overlapping time
+    const conflictCheck = await pool.query(
+      `SELECT scheduled_day, start_time, end_time, 'scheduled' AS source FROM Scheduled_class
+       WHERE faculty_id = $1 AND scheduled_day = $2
+         AND NOT (end_time <= $3::TIME OR start_time >= $4::TIME)
+       UNION ALL
+       SELECT scheduled_day, start_time, end_time, 'booked' AS source FROM booked_class
+       WHERE faculty_id = $1 AND scheduled_day = $2
+         AND NOT (end_time <= $3::TIME OR start_time >= $4::TIME)
+       LIMIT 1`,
+      [booked_by_faculty_id, scheduled_day, start_time, end_time]
+    );
+
+    if (conflictCheck.rows.length > 0) {
+      const conflict = conflictCheck.rows[0];
+      return res.status(409).json({
+        error: `You already have a class scheduled on ${scheduled_day} from ${conflict.start_time} to ${conflict.end_time}. Please choose a different time slot.`
       });
     }
 

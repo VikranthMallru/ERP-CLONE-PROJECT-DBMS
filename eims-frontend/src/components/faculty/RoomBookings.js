@@ -63,10 +63,14 @@ const RoomBookings = () => {
   const fetchAvailableRooms = async () => {
     try {
       setLoading(true);
-      console.log('Fetching available rooms for building:', selectedBuilding);
-      const response = await api.get(`/faculty/available-slots?building=${selectedBuilding}`);
+      console.log('Fetching available rooms for:', { building: selectedBuilding, day: selectedDay, start: selectedTime, end: endTime });
+      const response = await api.get(`/faculty/available-slots?building=${selectedBuilding}&day=${selectedDay}&start_time=${selectedTime}&end_time=${endTime}`);
       console.log('Available rooms:', response.data);
       setAvailableRooms(response.data);
+      if (response.data.length === 0) {
+        setError(`No rooms available in ${selectedBuilding} on ${selectedDay} from ${selectedTime} to ${endTime}`);
+        setTimeout(() => setError(''), 4000);
+      }
     } catch (err) {
       console.error('Error fetching available rooms:', err);
       setAvailableRooms([]);
@@ -83,6 +87,7 @@ const RoomBookings = () => {
   const handleBuildingChange = (e) => {
     setSelectedBuilding(e.target.value);
     setSelectedRoom(null);
+    setAvailableRooms([]);
   };
 
   const handleTimeChange = (e) => {
@@ -93,6 +98,8 @@ const RoomBookings = () => {
     const [hours, mins] = newTime.split(':');
     const nextHour = (parseInt(hours) + 1).toString().padStart(2, '0');
     setEndTime(`${nextHour}:${mins}`);
+    setSelectedRoom(null);
+    setAvailableRooms([]);
   };
 
   const handleBookClass = async () => {
@@ -204,7 +211,7 @@ const RoomBookings = () => {
                   <select
                     className="form-select"
                     value={selectedDay}
-                    onChange={(e) => setSelectedDay(e.target.value)}
+                    onChange={(e) => { setSelectedDay(e.target.value); setSelectedRoom(null); setAvailableRooms([]); }}
                   >
                     {daysOfWeek.map((day) => (
                       <option key={day} value={day}>
